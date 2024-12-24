@@ -1,100 +1,141 @@
 import sys
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore, QtGui
 
 
-class DraggableLine(QtWidgets.QFrame):
-    def __init__(self, orientation, parent=None):
-        super().__init__(parent)
-        self.setFrameShape(orientation)
-        self.setLineWidth(4)
-        self.setStyleSheet("background-color: black;")
-        self.dragging = False  # Tracks if the line is being dragged
-
-    def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.LeftButton:
-            self.dragging = True
-            self.start_pos = event.pos()
-
-    def mouseMoveEvent(self, event):
-        if self.dragging:
-            parent = self.parentWidget()
-            if self.frameShape() == QtWidgets.QFrame.HLine:
-                new_y = self.y() + (event.pos().y() - self.start_pos.y())
-                new_y = max(0, min(new_y, parent.height() - self.lineWidth()))
-                self.setGeometry(
-                    self.x(), new_y, self.width(), self.lineWidth())
-            elif self.frameShape() == QtWidgets.QFrame.VLine:
-                new_x = self.x() + (event.pos().x() - self.start_pos.x())
-                new_x = max(0, min(new_x, parent.width() - self.lineWidth()))
-                self.setGeometry(
-                    new_x, self.y(), self.lineWidth(), self.height())
-                # Update connected lines
-                if hasattr(parent, "update_connected_lines"):
-                    parent.update_connected_lines()
-
-    def mouseReleaseEvent(self, event):
-        if event.button() == QtCore.Qt.LeftButton:
-            self.dragging = False  # Stop dragging
-
-
-class BaseLines(QtWidgets.QWidget):
+class AoCEditor(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
+
         self.resize(1200, 1000)
-        self.setWindowTitle("AoCode")
+        self.setWindowTitle("Advent of Code IDE")
 
-        # Horizontal line (85% of the height)
-        self.horizontal_line = DraggableLine(QtWidgets.QFrame.HLine, self)
-        self.horizontal_line.setGeometry(
-            0, int(self.height() * 0.85), self.width(), 3)
+        # Overall layout for the window
+        main_layout = QtWidgets.QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+        top_widget = QtWidgets.QWidget()
+        top_layout = QtWidgets.QHBoxLayout(top_widget)
+        top_layout.setContentsMargins(10, 10, 10, 10)
+        top_layout.setSpacing(10)
 
-        # Second horizontal line (10% of the height)
-        self.second_horizontal_line = DraggableLine(
-            QtWidgets.QFrame.HLine, self)
-        self.second_horizontal_line.setGeometry(
-            0, int(self.height() * 0.1), self.width(), 3)
-
-        # Vertical line (25% of the width)
-        self.vertical_line = DraggableLine(QtWidgets.QFrame.VLine, self)
-        self.vertical_line.setGeometry(
-            int(self.width() * 0.333333), 0, 3, self.height())
-
-        self.update_connected_lines()  # Initial alignment
-
-    def update_connected_lines(self):
-        """Update the second horizontal line to stay connected to the vertical line."""
-        vertical_line_x = self.vertical_line.x()  # Get vertical line's position
-        self.horizontal_line.setGeometry(
-            vertical_line_x,  # Start at the vertical line
-            self.horizontal_line.y(),
-            self.width() - vertical_line_x,  # Extend to the right edge
-            self.horizontal_line.lineWidth(),
+        self.part_tabs = QtWidgets.QTabWidget()
+        self.part_tabs.setStyleSheet(
+            """
+            QTabWidget::pane {
+                border: none;
+                background: none;
+            }
+            QTabBar::tab {
+                background-color: #3a3a3a;
+                color: #ffffff;
+                padding: 8px 16px;
+                border: 1px solid #2f2f2f;
+            }
+            QTabBar::tab:selected {
+                background-color: #505050;
+                color: #ffffff;
+            }
+            """
         )
 
-    def resizeEvent(self, event):
-        """Ensure all lines resize dynamically when the window is resized."""
-        # Update horizontal line
-        self.horizontal_line.setGeometry(
-            0, int(self.height() * 0.85), self.width(), 3
-        )
+        self.add_part_tab("Part 1", "Description for part 1")
+        self.add_part_tab("Part 2", "Description for part 2")
 
-        # Update vertical line
-        self.vertical_line.setGeometry(
-            self.vertical_line.x(), 0, self.vertical_line.lineWidth(), self.height()
-        )
+        top_layout.addWidget(self.part_tabs)
+        top_layout.addStretch(1)
 
-        self.second_horizontal_line.setGeometry(
-            0, int(self.height() * 0.1), self.width(), 3
-        )
+        self.run_button = QtWidgets.QPushButton()
+        self.run_button.setFixedSize(35, 35)
+        self.run_button.setStyleSheet(
+            "border-radius: 17px; background-color: #888;")
+        self.run_button.setIcon(self.create_triangle_icon())
+        self.run_button.setIconSize(QtCore.QSize(20, 20))
+        self.run_button.clicked.connect(self.on_run_clicked)
+        top_layout.addWidget(self.run_button)
 
-        # Update connected horizontal line
-        self.update_connected_lines()
+        bottom_widget = QtWidgets.QWidget()
+        bottom_layout = QtWidgets.QVBoxLayout(bottom_widget)
+        bottom_layout.setContentsMargins(10, 0, 10, 10)
+        bottom_layout.setSpacing(0)
 
-        super().resizeEvent(event)
+        main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+
+        # part description on the left
+        self.part_panel = QtWidgets.QTextEdit()
+        self.part_panel.setPlaceholderText(
+            "Part description (Read-Only)")
+        self.part_panel.setReadOnly(True)
+        self.part_panel.setStyleSheet(
+            "background-color: white; color: black;")
+        main_splitter.addWidget(self.part_panel)
+
+        # Code editor + terminal on the right
+        right_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        self.code_editor = QtWidgets.QTextEdit()
+        self.code_editor.setPlaceholderText("Write your code here...")
+        self.code_editor.setStyleSheet(
+            "background-color: #1e1e1e; color: #cccccc;")
+        right_splitter.addWidget(self.code_editor)
+        self.terminal = QtWidgets.QTextEdit()
+        self.terminal.setPlaceholderText("Output will appear here...")
+        self.terminal.setStyleSheet(
+            "background-color: #1e1e1e; color: #cccccc;")
+        right_splitter.addWidget(self.terminal)
+        main_splitter.addWidget(right_splitter)
+
+        main_splitter.setSizes([300, 900])
+        right_splitter.setSizes([800, 200])
+
+        # Add horizontal splitter to the bottom widget layout
+        bottom_layout.addWidget(main_splitter)
+
+        vertical_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        vertical_splitter.addWidget(top_widget)
+        vertical_splitter.addWidget(bottom_widget)
+        main_layout.addWidget(vertical_splitter)
+        self.setLayout(main_layout)
+
+        # Update part description on tab change
+        self.part_tabs.currentChanged.connect(
+            self.update_part_description)
+
+    def add_part_tab(self, title, content):
+        """Add a tab for the given part, stored in self.part_panel"""
+        tab = QtWidgets.QWidget()
+        tab.setProperty("description", content)
+        self.part_tabs.addTab(tab, title)
+
+    def update_part_description(self):
+        """On tab switch, update user text."""
+        current_tab = self.part_tabs.currentWidget()
+        if current_tab:
+            description = current_tab.property("description")
+            self.part_panel.setText(description)
+
+    def create_triangle_icon(self):
+        """Make triangle"""
+        pixmap = QtGui.QPixmap(50, 50)
+        pixmap.fill(QtCore.Qt.transparent)
+        painter = QtGui.QPainter(pixmap)
+        painter.setBrush(QtGui.QBrush(QtGui.QColor("white")))
+        painter.setPen(QtCore.Qt.NoPen)
+        points = [
+            QtCore.QPoint(10, 10),
+            QtCore.QPoint(40, 25),
+            QtCore.QPoint(10, 40),
+        ]
+        painter.drawPolygon(QtGui.QPolygon(points))
+        painter.end()
+        return QtGui.QIcon(pixmap)
+
+    def on_run_clicked(self):
+        """Handle Run button click."""
+        print("Run button clicked!")
+        self.terminal.append("Running your solution...\n")
 
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    w = BaseLines()
-    w.show()
+    window = AoCEditor()
+    window.show()
     sys.exit(app.exec())
