@@ -30,7 +30,7 @@ def fetch_input(year, day, session_cookie):
         return response.text
     else:
         print(f"Failed to fetch input for {year} day {day}.")
-        return ""
+        return f"Your main input could not be fetched. Go to {url} to view."
 
 
 def extract_last_sentence(text):
