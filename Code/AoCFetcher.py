@@ -21,6 +21,18 @@ def fetch_problem(year, day, session_cookie):
         return ["Could not fetch Part 1", "Could not fetch Part 2"]
 
 
+def fetch_input(year, day, session_cookie):
+    url = f"https://adventofcode.com/{year}/day/{day}/input"
+    cookies = {'session': session_cookie}
+    response = requests.get(url, cookies=cookies)
+
+    if response.status_code == 200:
+        return response.text
+    else:
+        print(f"Failed to fetch input for {year} day {day}.")
+        return ""
+
+
 def extract_last_sentence(text):
     sentences = re.split(r'(?<=[.!?]) +', text.strip())
     return sentences[-1] if sentences else "No hint available."
