@@ -16,12 +16,12 @@ def fetch_problem(year, day, session_cookie):
         parts = soup.find_all('article')
 
         while len(parts) < 2:
-            parts.append("Could not fetch Part 2")
+            parts.append("Could not fetch Part 2. Maybe it's locked?")
 
         return [part.text if hasattr(part, 'text') else part for part in parts[:2]]
     else:
         print(f"Failed to fetch problem for {year} day {day}.")
-        return ["Could not fetch Part 1", "Could not fetch Part 2"]
+        return ["Could not fetch Part 1. Maybe it's locked?", "Could not fetch Part 2. Maybe it's locked?"]
 
 
 def fetch_input(year, day, session_cookie=None):
@@ -42,7 +42,7 @@ def fetch_input(year, day, session_cookie=None):
     if response.status_code == 200:
         return response.text
     else:
-        return f"Failed to fetch input for {year} day {day}."
+        return f"Failed to fetch input for {year} day {day}. Maybe your session key is wrong?"
 
 
 def get_last_paragraph(text):
