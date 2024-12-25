@@ -1,7 +1,7 @@
 import re
 import sys
 from PySide6 import QtWidgets, QtCore, QtGui
-from AoCFetcher import fetch_problem, extract_last_sentence
+from AoCFetcher import fetch_input, fetch_problem, get_last_paragraph
 
 
 class AoCEditor(QtWidgets.QWidget):
@@ -71,8 +71,14 @@ class AoCEditor(QtWidgets.QWidget):
             panel.setReadOnly(True)
             panel.setStyleSheet("background-color: #f0f0f0; color: black;")
 
+        self.input_panel = QtWidgets.QTextEdit()  # Create Input Panel
+        self.input_panel.setPlaceholderText("Enter your custom input here...")
+        self.input_panel.setStyleSheet(
+            "background-color: #ffffff; color: black;")
+
         self.problem_tabs.addTab(self.part1_panel, "Part 1")
         self.problem_tabs.addTab(self.part2_panel, "Part 2")
+        self.problem_tabs.addTab(self.input_panel, "Your input")
 
         left_layout.addWidget(self.problem_tabs)
         main_splitter.addWidget(left_widget)
@@ -117,7 +123,11 @@ class AoCEditor(QtWidgets.QWidget):
         self.part1_panel.setPlainText(part1_text)
         self.part2_panel.setPlainText(part2_text)
 
-        last_sentence = extract_last_sentence(part1_text)
+        # Get users input
+        user_input = fetch_input(year, day, self.session_cookie)
+        self.input_panel.setPlainText(user_input)
+
+        last_sentence = get_last_paragraph(part1_text)
         self.hint_box.setPlainText(last_sentence)
 
         # Show part 1 by default
@@ -126,28 +136,41 @@ class AoCEditor(QtWidgets.QWidget):
     def update_hint(self, index):
         """Update the hint box based on the selected part."""
         if index == 0:
-            last_sentence = extract_last_sentence(
+            last_sentence = get_last_paragraph(
                 self.part1_panel.toPlainText())
         else:
-            last_sentence = extract_last_sentence(
+            last_sentence = get_last_paragraph(
                 self.part2_panel.toPlainText())
 
         self.hint_box.setPlainText(last_sentence)
 
     def prompt_for_session(self):
-        """Prompt the user to input their AoC session token at launch (non-modal)."""
+        """Persistent popup for AoC session token (can't minimize or hide)."""
+
         self.dialog = QtWidgets.QDialog(self)
         self.dialog.setWindowTitle("Session Token Required")
-        self.dialog.setModal(False)
+
+        self.dialog.setWindowFlags(
+            QtCore.Qt.Dialog |
+            QtCore.Qt.WindowStaysOnTopHint |  # Stays above all windows
+            QtCore.Qt.CustomizeWindowHint |    # Remove close/minimize buttons
+            QtCore.Qt.WindowTitleHint          # Keep window title visible
+        )
+        self.dialog.setModal(True)
 
         layout = QtWidgets.QVBoxLayout(self.dialog)
-        label = QtWidgets.QLabel("Enter AoC Session Cookie:")
+
+        label = QtWidgets.QLabel(
+            "Please enter your Advent of Code session token:")
+        layout.addWidget(label)
+
         self.session_input = QtWidgets.QLineEdit()
         self.session_input.setEchoMode(QtWidgets.QLineEdit.Password)
-        submit_button = QtWidgets.QPushButton("Submit")
-
-        layout.addWidget(label)
+        self.session_input.setPlaceholderText("Session Token (128 characters)")
         layout.addWidget(self.session_input)
+
+        # Submit button
+        submit_button = QtWidgets.QPushButton("Submit")
         layout.addWidget(submit_button)
 
         def handle_submit():
@@ -157,15 +180,14 @@ class AoCEditor(QtWidgets.QWidget):
             if regex.search(self.session_cookie) or len(self.session_cookie) != 128:
                 QtWidgets.QMessageBox.warning(
                     self, "Invalid Session",
-                    "Invalid session token. Please enter a valid session token without special characters."
+                    "Invalid session token. Please enter a valid 128-character token."
                 )
-                self.dialog.reject()
                 return
 
             self.dialog.accept()
         submit_button.clicked.connect(handle_submit)
-        self.dialog.show()
-        return None
+        self.dialog.exec_()
+        return self.session_cookie
 
     def create_triangle_icon(self):
         pixmap = QtGui.QPixmap(50, 50)
