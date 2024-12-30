@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-# python_highlighter.py
-
+import re
 import sys
 from PySide6.QtCore import Qt
 from PySide6.QtGui import (
@@ -39,22 +37,13 @@ PYTHON_KEYWORDS = [
 
 
 class PythonHighlighter(QSyntaxHighlighter):
-    """
-    A PySide6-based Python syntax highlighter that:
-      - Highlights the next identifier after 'class' as a class name (blue)
-      - Handles multiline triple-quoted strings
-      - Handles unclosed single/double quotes (continuing across lines)
-      - Highlights # comments in gray
-      - Keywords in orange
-      - Default text in black
-    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
         # Keywords => Orange + Bold
         self.keyword_format = QTextCharFormat()
-        self.keyword_format.setForeground(QColor("#FF8C00"))  # orange
+        self.keyword_format.setForeground(QColor("#FF8C00"))
         self.keyword_format.setFontWeight(QFont.Bold)
 
         # Classes => Softer Blue + Bold
@@ -71,13 +60,28 @@ class PythonHighlighter(QSyntaxHighlighter):
         self.comment_format.setForeground(QColor("#888888"))
         self.comment_format.setFontItalic(True)
 
+        # Magic Methods => Maroon
+        self.magic_method_format = QTextCharFormat()
+        self.magic_method_format.setForeground(QColor("#FF6347"))
+        self.magic_method_format.setFontWeight(QFont.Bold)
+
+        # Brackets => White
+        self.bracket_format = QTextCharFormat()
+        self.bracket_format.setForeground(QColor("#FFFFFF"))
+
         # Normal => White
         self.normal_format = QTextCharFormat()
-        self.normal_format.setForeground(QColor("#ffffff"))
+        self.normal_format.setForeground(QColor("#FFFFFF"))
 
-        # Store the Python keywords
         self.keywords = PYTHON_KEYWORDS
         self.waiting_for_class_name = False
+
+        self.MAGIC_METHODS = ["__init__", "__str__",
+                              "__repr__", "__len__", "__eq__"]
+        self.escaped_methods = [re.escape(method)
+                                for method in self.MAGIC_METHODS]
+        self.pattern = r'\b(?:' + '|'.join(self.escaped_methods) + r')\b'
+        self.magic_methods_regex = re.compile(self.pattern)
 
     def highlightBlock(self, text: str):
         """
@@ -146,12 +150,18 @@ class PythonHighlighter(QSyntaxHighlighter):
                     self.setCurrentBlockState(STATE_NONE)
 
             else:
+                # Search for the earliest occurrence of any special token
                 triple_single_index = text.find("'''", i)
                 triple_double_index = text.find('"""', i)
                 single_quote_index = text.find("'", i)
                 double_quote_index = text.find('"', i)
                 hash_index = text.find('#', i)
 
+                # Find magic method matches in the current text block
+                magic_matches = list(
+                    self.magic_methods_regex.finditer(text, i))
+
+                # Initialize matches list
                 matches = []
                 if triple_single_index != -1:
                     matches.append((triple_single_index, "multisingle"))
@@ -164,7 +174,11 @@ class PythonHighlighter(QSyntaxHighlighter):
                 if hash_index != -1:
                     matches.append((hash_index, "comment"))
 
-                if not matches:
+                # Add magic method matches to the matches list
+                for match in magic_matches:
+                    matches.append((match.start(), "magic"))
+
+                if not matches and not magic_matches:
                     # No special tokens -> highlight leftover code
                     self.highlight_keywords_and_class_names(text, i, length)
                     break
@@ -205,15 +219,12 @@ class PythonHighlighter(QSyntaxHighlighter):
                         self.setFormat(i, close_index - i +
                                        1, self.string_format)
                         i = close_index + 1
-                        # Keep going
 
                 elif token_type == "double":
-                    # Highlight opening double quote and enter double-quoted string
                     self.setFormat(found_pos, 1, self.string_format)
                     i = found_pos + 1
                     close_index = self.find_unescaped_quote(text, '"', i)
                     if close_index == -1:
-                        # Unclosed double quote => highlight rest of line
                         self.setFormat(i, length - i, self.string_format)
                         self.setCurrentBlockState(STATE_DOUBLE_UNCLOSED)
                         break
@@ -222,8 +233,15 @@ class PythonHighlighter(QSyntaxHighlighter):
                                        1, self.string_format)
                         i = close_index + 1
 
-            if state == STATE_NONE:
-                self.waiting_for_class_name = False
+                elif token_type == "magic":
+                    # Highlight the magic method
+                    match = next(
+                        (m for m in magic_matches if m.start() == found_pos), None)
+                    if match:
+                        method_length = match.end() - match.start()
+                        self.setFormat(match.start(), method_length,
+                                       self.magic_method_format)
+                        i = match.end()
 
     def highlight_keywords_and_class_names(self, text, start_pos, end_pos):
         """
@@ -255,7 +273,8 @@ class PythonHighlighter(QSyntaxHighlighter):
             else:
                 # Else, check if keyword
                 if word in self.keywords:
-                    self.setFormat(start_word, len(word), self.keyword_format)
+                    self.setFormat(start_word, len(
+                        word), self.keyword_format)
                     if word == "class":
                         self.waiting_for_class_name = True
 
@@ -275,10 +294,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         return -1
 
     def highlight_brackets(self, text):
-        """
-        Highlights brackets ()[]{ } in black.
-        """
         brackets = "()[]{}"
         for idx, ch in enumerate(text):
             if ch in brackets:
-                self.setFormat(idx, 1, self.normal_format)
+                self.setFormat(idx, 1, self.bracket_format)
