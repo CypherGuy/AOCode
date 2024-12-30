@@ -2,6 +2,8 @@ import re
 import sys
 from PySide6 import QtWidgets, QtCore, QtGui
 from AoCFetcher import fetch_input, fetch_problem, get_last_paragraph
+from codeEditor import PythonHighlighter
+from PySide6.QtGui import QFont
 
 
 class AoCEditor(QtWidgets.QWidget):
@@ -87,7 +89,12 @@ class AoCEditor(QtWidgets.QWidget):
 
         self.code_editor = QtWidgets.QTextEdit()
         self.code_editor.setPlaceholderText("Write your code here...")
+
+        font = QFont("Menlo", 14)  # Monospaced font with size 14
+        self.code_editor.setFont(font)
+
         right_splitter.addWidget(self.code_editor)
+        self.highlighter = PythonHighlighter(self.code_editor.document())
 
         self.terminal = QtWidgets.QTextEdit()
         self.terminal.setPlaceholderText("Output will appear here...")
@@ -169,7 +176,6 @@ class AoCEditor(QtWidgets.QWidget):
         self.session_input.setPlaceholderText("Session Token (128 characters)")
         layout.addWidget(self.session_input)
 
-        # Submit button
         submit_button = QtWidgets.QPushButton("Submit")
         layout.addWidget(submit_button)
 
@@ -186,7 +192,7 @@ class AoCEditor(QtWidgets.QWidget):
 
             self.dialog.accept()
         submit_button.clicked.connect(handle_submit)
-        self.dialog.exec_()
+        self.dialog.exec()
         return self.session_cookie
 
     def create_triangle_icon(self):
