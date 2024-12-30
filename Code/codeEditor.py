@@ -1,10 +1,7 @@
 import re
-import sys
-from PySide6.QtCore import Qt
 from PySide6.QtGui import (
     QSyntaxHighlighter, QTextCharFormat, QColor, QFont
 )
-from PySide6.QtWidgets import QApplication, QTextEdit
 
 # For our State controller
 STATE_NONE = 0
