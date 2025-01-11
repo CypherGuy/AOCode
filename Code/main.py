@@ -4,6 +4,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from AoCFetcher import fetch_input, fetch_problem, get_last_paragraph
 from codeEditor import PythonHighlighter
 from PySide6.QtGui import QFont, QTextCursor
+from exec import execute_code
 
 
 class AoCEditor(QtWidgets.QWidget):
@@ -59,8 +60,10 @@ class AoCEditor(QtWidgets.QWidget):
         self.run_button.setIconSize(QtCore.QSize(40, 40))
         dropdown_layout.addWidget(self.run_button)
 
-        row1_layout.addLayout(dropdown_layout, 0, 1)
+        # Execute code and put output in terminal after pressing run button
+        self.run_button.clicked.connect(self.run_code)
 
+        row1_layout.addLayout(dropdown_layout, 0, 1)
         main_layout.addLayout(row1_layout)
 
         # Row 2: Problem Description and Code/Terminal Section
@@ -135,6 +138,16 @@ class AoCEditor(QtWidgets.QWidget):
 
         self.update_problem_description()
         self.problem_tabs.currentChanged.connect(self.update_hint)
+
+    def run_code(self):
+        code = self.code_editor.toPlainText().strip()
+
+        if not code:
+            self.terminal.setPlainText("Error: No code to execute!")
+            return
+
+        output = execute_code(code)
+        self.terminal.setPlainText(output)
 
     def eventFilter(self, obj, event):
         if obj == self.code_editor and event.type() == QtCore.QEvent.KeyPress:
