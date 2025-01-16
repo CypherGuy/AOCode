@@ -32,6 +32,9 @@ PYTHON_KEYWORDS = [
     "print"
 ]
 
+MAGIC_METHODS = ["__init__", "__str__",
+                 "__repr__", "__len__", "__eq__"]
+
 
 class PythonHighlighter(QSyntaxHighlighter):
 
@@ -70,15 +73,19 @@ class PythonHighlighter(QSyntaxHighlighter):
         self.normal_format = QTextCharFormat()
         self.normal_format.setForeground(QColor("#FFFFFF"))
 
+        # Integers => Purple
+        self.integer_format = QTextCharFormat()
+        self.integer_format.setForeground(QColor("#BB83E6"))
+
         self.keywords = PYTHON_KEYWORDS
         self.waiting_for_class_name = False
 
-        self.MAGIC_METHODS = ["__init__", "__str__",
-                              "__repr__", "__len__", "__eq__"]
         self.escaped_methods = [re.escape(method)
-                                for method in self.MAGIC_METHODS]
+                                for method in MAGIC_METHODS]
         self.pattern = r'\b(?:' + '|'.join(self.escaped_methods) + r')\b'
         self.magic_methods_regex = re.compile(self.pattern)
+
+        self.integer_regex = re.compile(r'\b\d+\b')
 
     def highlightBlock(self, text: str):
         """
@@ -153,6 +160,7 @@ class PythonHighlighter(QSyntaxHighlighter):
                 single_quote_index = text.find("'", i)
                 double_quote_index = text.find('"', i)
                 hash_index = text.find('#', i)
+                integer_matches = list(self.integer_regex.finditer(text, i))
 
                 # Find magic method matches in the current text block
                 magic_matches = list(
@@ -174,6 +182,9 @@ class PythonHighlighter(QSyntaxHighlighter):
                 # Add magic method matches to the matches list
                 for match in magic_matches:
                     matches.append((match.start(), "magic"))
+
+                for match in integer_matches:
+                    matches.append((match.start(), "integer"))
 
                 if not matches and not magic_matches:
                     # No special tokens -> highlight leftover code
@@ -232,21 +243,21 @@ class PythonHighlighter(QSyntaxHighlighter):
 
                 elif token_type == "magic":
                     # Highlight the magic method
-                    match = next(
-                        (m for m in magic_matches if m.start() == found_pos), None)
-                    if match:
+                    for match in self.magic_methods_regex.finditer(text):
                         method_length = match.end() - match.start()
                         self.setFormat(match.start(), method_length,
                                        self.magic_method_format)
                         i = match.end()
 
+                elif token_type == "integer":  # Integer may be more then 1 number
+                    for match in self.integer_regex.finditer(text):
+                        self.setFormat(match.start(), match.end(
+                        ) - match.start(), self.integer_format)
+                        i = match.end()
+
     def highlight_keywords_and_class_names(self, text, start_pos, end_pos):
         """
-        Parses the text chunk [start_pos:end_pos], 
-        highlighting keywords and the next valid identifier if we just saw 'class'.
-        We do NOT reset self.waiting_for_class_name on punctuation, so even if
-        there's whitespace or parentheses after 'class', the next identifier 
-        is still the class name.
+        Parses the text chunk [start_pos:end_pos]
         """
         i = start_pos
 
