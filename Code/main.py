@@ -4,7 +4,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from AoCFetcher import fetch_input, fetch_problem, get_last_paragraph
 from codeEditor import PythonHighlighter
 from PySide6.QtGui import QFont, QTextCursor
-from exec import execute_code
+from exec import execute_code, submit_answer
 
 
 class AoCEditor(QtWidgets.QWidget):
@@ -14,7 +14,12 @@ class AoCEditor(QtWidgets.QWidget):
         self.resize(1200, 1000)
         self.setWindowTitle("Advent of Code IDE")
 
-        self.session_cookie = self.prompt_for_session()
+        self.session_cookie = self.get_session_token()
+        if not self.session_cookie:
+            QtWidgets.QMessageBox.critical(
+                self, "No Session Token", "A valid session token is required to continue."
+            )
+            QtWidgets.QApplication.instance().quit()
 
         main_layout = QtWidgets.QVBoxLayout(self)
 
@@ -66,6 +71,13 @@ class AoCEditor(QtWidgets.QWidget):
         row1_layout.addLayout(dropdown_layout, 0, 1)
         main_layout.addLayout(row1_layout)
 
+        # Add Submit button next to the Run button
+        self.submit_button = QtWidgets.QPushButton(self)
+        self.submit_button.setFixedSize(80, 50)
+        self.submit_button.setText("Submit")
+        self.submit_button.clicked.connect(self.handle_submit_button)
+        dropdown_layout.addWidget(self.submit_button)
+
         # Row 2: Problem Description and Code/Terminal Section
         main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
@@ -93,6 +105,8 @@ class AoCEditor(QtWidgets.QWidget):
 
         left_layout.addWidget(self.problem_tabs)
         main_splitter.addWidget(left_widget)
+
+        self.year, self.day, self.part = self.get_info()
 
         right_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
 
@@ -138,6 +152,32 @@ class AoCEditor(QtWidgets.QWidget):
 
         self.update_problem_description()
         self.problem_tabs.currentChanged.connect(self.update_hint)
+
+    def handle_submit_button(self):
+        # Handles the submit button action
+        year, day, part = self.get_info()
+        submit_answer(year, day, part, self.session_cookie,
+                      self.terminal.toPlainText(), self.terminal)
+
+    def get_info(self):
+        # Get the currently selected tab index
+        current_tab = self.problem_tabs.currentIndex()
+
+        # Determine the part based on the index
+        if current_tab == 0:
+            part = "1"
+        elif current_tab == 1:
+            part = "2"
+        else:
+            QtWidgets.QMessageBox.warning(
+                self, "Invalid Tab", "You can only submit answers for Part 1 or Part 2!"
+            )
+            return
+
+        # Retrieve year and day
+        year = self.year_dropdown.currentText()
+        day = self.day_dropdown.currentText()
+        return year, day, part
 
     def run_code(self):
         code = self.code_editor.toPlainText().strip()
@@ -253,49 +293,51 @@ class AoCEditor(QtWidgets.QWidget):
 
         self.hint_box.setPlainText(last_sentence)
 
-    def prompt_for_session(self):
-        self.dialog = QtWidgets.QDialog(self)
-        self.dialog.setWindowTitle("Session Token Required")
+    def get_session_token(parent=None):
+        while True:
+            dialog = QtWidgets.QDialog(parent)
+            dialog.setWindowTitle("Session Token Required")
+            dialog.setWindowFlags(
+                QtCore.Qt.Dialog |
+                QtCore.Qt.WindowStaysOnTopHint |
+                QtCore.Qt.CustomizeWindowHint |
+                QtCore.Qt.WindowTitleHint
+            )
+            dialog.setModal(True)
 
-        self.dialog.setWindowFlags(
-            QtCore.Qt.Dialog |
-            QtCore.Qt.WindowStaysOnTopHint |
-            QtCore.Qt.CustomizeWindowHint |
-            QtCore.Qt.WindowTitleHint
-        )
-        self.dialog.setModal(True)
+            layout = QtWidgets.QVBoxLayout(dialog)
 
-        layout = QtWidgets.QVBoxLayout(self.dialog)
+            label = QtWidgets.QLabel(
+                "Please enter your Advent of Code session token (128 characters):"
+            )
+            layout.addWidget(label)
 
-        label = QtWidgets.QLabel(
-            "Please enter your Advent of Code session token:"
-        )
-        layout.addWidget(label)
+            session_input = QtWidgets.QLineEdit()
+            session_input.setEchoMode(QtWidgets.QLineEdit.Password)
+            session_input.setPlaceholderText("Session Token (128 characters)")
+            layout.addWidget(session_input)
 
-        self.session_input = QtWidgets.QLineEdit()
-        self.session_input.setEchoMode(QtWidgets.QLineEdit.Password)
-        self.session_input.setPlaceholderText("Session Token (128 characters)")
-        layout.addWidget(self.session_input)
+            submit_button = QtWidgets.QPushButton("Submit")
+            layout.addWidget(submit_button)
 
-        submit_button = QtWidgets.QPushButton("Submit")
-        layout.addWidget(submit_button)
+            valid_token = [None]
 
-        def handle_submit():
-            self.session_cookie = self.session_input.text().strip()
-            regex = re.compile(r'[^a-zA-Z0-9-_]')
+            def handle_submit():
+                token = session_input.text().strip()
+                if len(token) == 128 and token.isalnum():
+                    valid_token[0] = token
+                    dialog.accept()
+                else:
+                    QtWidgets.QMessageBox.warning(
+                        dialog, "Invalid Session",
+                        "Invalid session token. Please ensure it is exactly 128 alphanumeric characters."
+                    )
 
-            if regex.search(self.session_cookie) or len(self.session_cookie) != 128:
-                QtWidgets.QMessageBox.warning(
-                    self, "Invalid Session",
-                    "Invalid session token. Please enter a valid 128-character token."
-                )
-                return
+            submit_button.clicked.connect(handle_submit)
+            dialog.exec()
 
-            self.dialog.accept()
-
-        submit_button.clicked.connect(handle_submit)
-        self.dialog.exec()
-        return self.session_cookie
+            if valid_token[0]:
+                return valid_token[0]
 
     def create_triangle_icon(self):
         pixmap = QtGui.QPixmap(50, 50)
