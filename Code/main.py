@@ -2,7 +2,7 @@ import re
 import sys
 from PySide6 import QtWidgets, QtCore, QtGui
 from AoCFetcher import fetch_input, fetch_problem, get_last_paragraph
-from codeEditor import PythonHighlighter
+from Code.Highlighter import PythonHighlighter
 from PySide6.QtGui import QFont, QTextCursor
 from exec import execute_code, submit_answer
 
