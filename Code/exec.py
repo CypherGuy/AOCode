@@ -26,10 +26,11 @@ def execute_code(code):
                 time_taken = end_time - start_time
                 return f"Process took approximately {time_taken:.4f} seconds\n{result.stderr}"
     except subprocess.TimeoutExpired:
-        return "There's very likely an infinite loop/recursion or a way to do it much quicker. Every solution can be done in under 15 seconds, this has returned after 60."
+        return "There's very likely an infinite loop/recursion or a way to do it much quicker. Every solution can be done in under 15 seconds, this has returned after 20."
 
 
-def submit_answer(year, day, part, token, answer, terminal):
+def submit_answer(year, day, part, token, answer, terminal, instance):
+    from main import AoCEditor
     url = f"https://adventofcode.com/{year}/day/{day}/answer"
     headers = {
         'User-Agent': 'AoCode',
@@ -47,28 +48,21 @@ def submit_answer(year, day, part, token, answer, terminal):
 
     # Parse the response.text using BeautifulSoup
     soup = BeautifulSoup(response.text, 'html.parser')
-
     p_tag = soup.find('article').find('p')
-
-    for a_tag in p_tag.find_all('a'):
-        a_tag.decompose()
-
-    # Locate the specific <p> tag within the <article>
     article_text = p_tag.text.strip()
 
-    if "That's the right answer" in article_text:
-        x = "Answer submitted successfully! That's the right answer."
-    elif "That's not the right answer" in article_text:
-        x = article_text
-    elif "You gave an answer too recently" in article_text:
-        x = article_text
-    else:
-        x = "Answer submitted, received unexpected response."
+    colour = "green" if "That's the right answer" in article_text else "red"
 
-    # Determine the colour based on success or failure
-    colour = "green" if "Answer submitted successfully! That's the right answer." in article_text else "red"
-
-    # Append the styled text to the terminal
     terminal.append(f'''<span style="color: {
-        colour};">------<br>{x}</span>''')
-    print(x)
+        colour};">------<br>{article_text}</span>''')
+
+    # Go to part 2 if right so the question can be quickly seen
+    if "Answer submitted successfully! That's the right answer." in article_text:
+        _, _, part = instance.get_info()
+        if part == "1":
+            time.sleep(0.5)  # Give it some time to load the page in case
+
+            instance.problem_tabs.setCurrentIndex(1)
+
+    terminal.append("<br>")
+    terminal.append(f'<span style="color: black ;"/>')

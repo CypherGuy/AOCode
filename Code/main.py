@@ -1,8 +1,7 @@
-import re
 import sys
 from PySide6 import QtWidgets, QtCore, QtGui
 from AoCFetcher import fetch_input, fetch_problem, get_last_paragraph
-from Code.Highlighter import PythonHighlighter
+from Highlighter import PythonHighlighter
 from PySide6.QtGui import QFont, QTextCursor
 from exec import execute_code, submit_answer
 
@@ -157,7 +156,7 @@ class AoCEditor(QtWidgets.QWidget):
         # Handles the submit button action
         year, day, part = self.get_info()
         submit_answer(year, day, part, self.session_cookie,
-                      self.terminal.toPlainText(), self.terminal)
+                      self.terminal.toPlainText(), self.terminal, self)
 
     def get_info(self):
         # Get the currently selected tab index
@@ -170,7 +169,7 @@ class AoCEditor(QtWidgets.QWidget):
             part = "2"
         else:
             QtWidgets.QMessageBox.warning(
-                self, "Invalid Tab", "You can only submit answers for Part 1 or Part 2!"
+                self, "Invalid Tab", "You must be on either Part 1 or Part 2 to submit. Look on the tabs to the left."
             )
             return
 
