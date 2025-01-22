@@ -11,26 +11,19 @@ STATE_SINGLE_UNCLOSED = 3
 STATE_DOUBLE_UNCLOSED = 4
 
 PYTHON_KEYWORDS = [
-    "False", "None", "True",
-    "and", "as", "assert",
-    "async", "await",
-    "break",
-    "class", "continue",
-    "def", "del",
-    "elif", "else", "except",
-    "finally", "for", "from",
-    "global",
-    "if", "import", "in", "is",
-    "lambda",
-    "nonlocal", "not",
-    "or",
-    "pass",
-    "raise", "return",
-    "try",
-    "while", "with",
-    "yield",
-    "print"
+    'False', 'None', 'True', 'and', 'as', 'assert',
+    'async', 'await', 'break', 'class', 'continue',
+    'def', 'del', 'elif', 'else', 'except',
+    'finally', 'for', 'from', 'global', 'if',
+    'import', 'in', 'is', 'lambda', 'nonlocal',
+    'not', 'or', 'pass', 'raise', 'return',
+    'try', 'while', 'with', 'yield', 'print',
+    'abs', 'all', 'any', 'bin', 'bool', 'bytearray',
+    'bytes', 'chr', 'complex', 'divmod',
+    'enumerate', 'float', 'format', 'frozenset',
+    'hex', 'int', 'input', 'isinstance', 'iter',
 ]
+
 
 MAGIC_METHODS = ["__init__", "__str__",
                  "__repr__", "__len__", "__eq__"]
