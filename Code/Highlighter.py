@@ -11,7 +11,7 @@ STATE_SINGLE_UNCLOSED = 3
 STATE_DOUBLE_UNCLOSED = 4
 
 PYTHON_KEYWORDS = [
-    'False', 'None', 'True', 'and', 'as', 'assert',
+    'None', 'and', 'as', 'assert',
     'async', 'await', 'break', 'class', 'continue',
     'def', 'del', 'elif', 'else', 'except',
     'finally', 'for', 'from', 'global', 'if',
@@ -21,12 +21,14 @@ PYTHON_KEYWORDS = [
     'abs', 'all', 'any', 'bin', 'bool', 'bytearray',
     'bytes', 'chr', 'complex', 'divmod',
     'enumerate', 'float', 'format', 'frozenset',
-    'hex', 'int', 'input', 'isinstance', 'iter',
+    'hex', 'input', 'isinstance', 'iter'
 ]
 
 
 MAGIC_METHODS = ["__init__", "__str__",
                  "__repr__", "__len__", "__eq__"]
+
+BOOLS = ["True", "False"]
 
 
 class PythonHighlighter(QSyntaxHighlighter):
@@ -66,7 +68,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         self.normal_format = QTextCharFormat()
         self.normal_format.setForeground(QColor("#FFFFFF"))
 
-        # Integers => Purple
+        # Integers & Boolean => Purple
         self.integer_format = QTextCharFormat()
         self.integer_format.setForeground(QColor("#BB83E6"))
 
@@ -242,8 +244,13 @@ class PythonHighlighter(QSyntaxHighlighter):
                                        self.magic_method_format)
                         i = match.end()
 
-                elif token_type == "integer":  # Integer may be more then 1 number
+                # Integer may be more then 1 number
+                elif token_type in ["integer", "boolean"]:
                     for match in self.integer_regex.finditer(text):
+                        self.setFormat(match.start(), match.end(
+                        ) - match.start(), self.integer_format)
+                        i = match.end()
+                    for match in self.boolean_regex.finditer(text):
                         self.setFormat(match.start(), match.end(
                         ) - match.start(), self.integer_format)
                         i = match.end()

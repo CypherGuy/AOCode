@@ -4,6 +4,7 @@ from AoCFetcher import fetch_input, fetch_problem, get_last_paragraph
 from Highlighter import PythonHighlighter
 from PySide6.QtGui import QFont, QTextCursor
 from exec import execute_code, submit_answer
+from utils import Utils
 
 
 class AoCEditor(QtWidgets.QWidget):
@@ -87,13 +88,20 @@ class AoCEditor(QtWidgets.QWidget):
         self.problem_tabs = QtWidgets.QTabWidget()
         self.part1_panel = QtWidgets.QTextEdit()
         self.part2_panel = QtWidgets.QTextEdit()
+        self.utils_panel = QtWidgets.QTextEdit()
 
-        for panel in [self.part1_panel, self.part2_panel]:
-            panel.setReadOnly(True)
+        self.utilsEditor = Utils(self.session_cookie, self.utils_panel)
+
+        for panel in [self.part1_panel, self.part2_panel, self.utils_panel]:
             panel.setStyleSheet("background-color: #f0f0f0; color: black;")
 
+        self.utils_panel.setPlaceholderText(
+            self.utilsEditor.default_template)
+
+        self.part1_panel.setReadOnly(True)
+        self.part2_panel.setReadOnly(True)
+
         self.input_panel = QtWidgets.QTextEdit()
-        self.input_panel.setPlaceholderText("Enter your custom input here...")
         self.input_panel.setStyleSheet(
             "background-color: #ffffff; color: black;"
         )
@@ -101,6 +109,7 @@ class AoCEditor(QtWidgets.QWidget):
         self.problem_tabs.addTab(self.part1_panel, "Part 1")
         self.problem_tabs.addTab(self.part2_panel, "Part 2")
         self.problem_tabs.addTab(self.input_panel, "Your input")
+        self.problem_tabs.addTab(self.utils_panel, "Utils File")
 
         left_layout.addWidget(self.problem_tabs)
         main_splitter.addWidget(left_widget)
@@ -285,14 +294,14 @@ class AoCEditor(QtWidgets.QWidget):
             last_sentence = get_last_paragraph(
                 self.part1_panel.toPlainText()
             )
-        else:
+            self.hint_box.setPlainText(last_sentence)
+        elif index == 1:
             last_sentence = get_last_paragraph(
                 self.part2_panel.toPlainText()
             )
+            self.hint_box.setPlainText(last_sentence)
 
-        self.hint_box.setPlainText(last_sentence)
-
-    def get_session_token(parent=None):
+    def get_session_token(parent=None, utils=False):
         while True:
             dialog = QtWidgets.QDialog(parent)
             dialog.setWindowTitle("Session Token Required")
@@ -306,9 +315,14 @@ class AoCEditor(QtWidgets.QWidget):
 
             layout = QtWidgets.QVBoxLayout(dialog)
 
-            label = QtWidgets.QLabel(
-                "Please enter your Advent of Code session token (128 characters):"
-            )
+            if not utils:
+                label = QtWidgets.QLabel(
+                    "Please enter your Advent of Code session token (128 characters):"
+                )
+            else:
+                label = QtWidgets.QLabel(
+                    "Due to privacy reasons, please enter your Advent of Code session token (128 characters):"
+                )
             layout.addWidget(label)
 
             session_input = QtWidgets.QLineEdit()
@@ -329,7 +343,7 @@ class AoCEditor(QtWidgets.QWidget):
                 else:
                     QtWidgets.QMessageBox.warning(
                         dialog, "Invalid Session",
-                        "Invalid session token. Please ensure it is exactly 128 alphanumeric characters."
+                        "Invalid session token. Please ensure it is exactly 128 alphanumeric characters and try again."
                     )
 
             submit_button.clicked.connect(handle_submit)
