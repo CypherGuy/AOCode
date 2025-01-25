@@ -41,6 +41,11 @@ class PythonHighlighter(QSyntaxHighlighter):
         self.keyword_format.setForeground(QColor("#FF8C00"))
         self.keyword_format.setFontWeight(QFont.Bold)
 
+        # Functions => Dark Orange + Bold
+        self.function_format = QTextCharFormat()
+        self.function_format.setForeground(QColor("#DC7800"))
+        self.function_format.setFontWeight(QFont.Bold)
+
         # Classes => Softer Blue + Bold
         self.class_format = QTextCharFormat()
         self.class_format.setForeground(QColor("#6699CC"))
@@ -69,8 +74,8 @@ class PythonHighlighter(QSyntaxHighlighter):
         self.normal_format.setForeground(QColor("#FFFFFF"))
 
         # Integers & Boolean => Purple
-        self.integer_format = QTextCharFormat()
-        self.integer_format.setForeground(QColor("#BB83E6"))
+        self.integer_boolean_format = QTextCharFormat()
+        self.integer_boolean_format.setForeground(QColor("#BB83E6"))
 
         self.keywords = PYTHON_KEYWORDS
         self.waiting_for_class_name = False
@@ -80,7 +85,11 @@ class PythonHighlighter(QSyntaxHighlighter):
         self.pattern = r'\b(?:' + '|'.join(self.escaped_methods) + r')\b'
         self.magic_methods_regex = re.compile(self.pattern)
 
-        self.integer_regex = re.compile(r'\b\d+\b')
+        self.integer_boolean_regex = re.compile(r'\b\d+\b')
+
+        self.function_regex = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_]*(?=\()'
+
+                                         )
 
     def highlightBlock(self, text: str):
         """
@@ -155,7 +164,8 @@ class PythonHighlighter(QSyntaxHighlighter):
                 single_quote_index = text.find("'", i)
                 double_quote_index = text.find('"', i)
                 hash_index = text.find('#', i)
-                integer_matches = list(self.integer_regex.finditer(text, i))
+                integer_boolean_matches = list(
+                    self.integer_boolean_regex.finditer(text, i))
 
                 # Find magic method matches in the current text block
                 magic_matches = list(
@@ -178,8 +188,13 @@ class PythonHighlighter(QSyntaxHighlighter):
                 for match in magic_matches:
                     matches.append((match.start(), "magic"))
 
-                for match in integer_matches:
-                    matches.append((match.start(), "integer"))
+                for match in integer_boolean_matches:
+                    matches.append((match.start(), "integer-boolean"))
+
+                # Add function matches to the matches list
+                function_matches = list(self.function_regex.finditer(text, i))
+                for match in function_matches:
+                    matches.append((match.start(), "function"))
 
                 if not matches and not magic_matches:
                     # No special tokens -> highlight leftover code
@@ -245,14 +260,16 @@ class PythonHighlighter(QSyntaxHighlighter):
                         i = match.end()
 
                 # Integer may be more then 1 number
-                elif token_type in ["integer", "boolean"]:
-                    for match in self.integer_regex.finditer(text):
+                elif token_type == "integer-boolean":
+                    for match in self.integer_boolean_regex.finditer(text):
                         self.setFormat(match.start(), match.end(
-                        ) - match.start(), self.integer_format)
+                        ) - match.start(), self.integer_boolean_format)
                         i = match.end()
-                    for match in self.boolean_regex.finditer(text):
+
+                elif token_type == "function":
+                    for match in self.function_regex.finditer(text):
                         self.setFormat(match.start(), match.end(
-                        ) - match.start(), self.integer_format)
+                        ) - match.start(), self.function_format)
                         i = match.end()
 
     def highlight_keywords_and_class_names(self, text, start_pos, end_pos):
