@@ -10,7 +10,7 @@ def execute_code(code):
     start_time = time.time()
     try:
         if len(code) == 0:
-            return "Nothing in the terminal to execute :()"
+            return "Nothing in the editor to execute :()"
         with tempfile.NamedTemporaryFile('w', suffix='.py') as f:
             f.write(code)
             f.flush()

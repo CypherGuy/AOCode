@@ -77,6 +77,11 @@ class PythonHighlighter(QSyntaxHighlighter):
         self.integer_boolean_format = QTextCharFormat()
         self.integer_boolean_format.setForeground(QColor("#BB83E6"))
 
+        # "self" => Italic + Purple
+        self.self_format = QTextCharFormat()
+        self.self_format.setForeground(QColor("#BB83E6"))
+        self.self_format.setFontItalic(True)
+
         self.keywords = PYTHON_KEYWORDS
         self.waiting_for_class_name = False
 
@@ -87,9 +92,8 @@ class PythonHighlighter(QSyntaxHighlighter):
 
         self.integer_boolean_regex = re.compile(r'\b\d+\b')
 
-        self.function_regex = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_]*(?=\()'
-
-                                         )
+        self.function_regex = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_]*(?=\()')
+        self.self_regex = re.compile(r'\bself.')
 
     def highlightBlock(self, text: str):
         """
@@ -171,6 +175,9 @@ class PythonHighlighter(QSyntaxHighlighter):
                 magic_matches = list(
                     self.magic_methods_regex.finditer(text, i))
 
+                self_matches = list(
+                    self.self_regex.finditer(text, i))
+
                 # Initialize matches list
                 matches = []
                 if triple_single_index != -1:
@@ -195,6 +202,9 @@ class PythonHighlighter(QSyntaxHighlighter):
                 function_matches = list(self.function_regex.finditer(text, i))
                 for match in function_matches:
                     matches.append((match.start(), "function"))
+
+                for match in self_matches:
+                    matches.append((match.start(), "self"))
 
                 if not matches and not magic_matches:
                     # No special tokens -> highlight leftover code
@@ -271,6 +281,16 @@ class PythonHighlighter(QSyntaxHighlighter):
                         self.setFormat(match.start(), match.end(
                         ) - match.start(), self.function_format)
                         i = match.end()
+
+                elif token_type == "self":
+                    for match in self.self_regex.finditer(text):
+                        self.setFormat(match.start(), match.end(
+                        ) - match.start(), self.self_format)
+                        i = match.end()
+
+                else:
+                    self.highlight_keywords_and_class_names(text, i, length)
+                    break
 
     def highlight_keywords_and_class_names(self, text, start_pos, end_pos):
         """
