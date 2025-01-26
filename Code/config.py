@@ -1,0 +1,2 @@
+TOKEN = None
+HASHED_TOKEN = None

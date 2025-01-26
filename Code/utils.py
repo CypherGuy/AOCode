@@ -2,12 +2,14 @@ import hashlib
 import os
 from PySide6.QtWidgets import QMessageBox
 from Highlighter import PythonHighlighter
+import config
 
 
 class Utils:
-    def __init__(self, token, panel):
-        self.token = token
-        self.user_id = self.generate_user_id(token)
+    def __init__(self, panel):
+        self.token = config.TOKEN
+        self.user_id = self.generate_user_id(self.token)
+        config.HASHED_TOKEN = self.user_id
         self.utils_dir = os.path.join("user_files", self.user_id)
         self.utils_path = os.path.join(self.utils_dir, "utils.py")
         self.default_template = self.get_template()
@@ -36,6 +38,15 @@ class Utils:
             with open(self.utils_path, "r") as f:
                 content = f.read()
                 self.panel.setPlainText(content)
+        except Exception as e:
+            QMessageBox.critical(
+                None, "Error", f"Failed to load utils.py: {e}"
+            )
+
+    def get_content(self):
+        try:
+            with open(self.utils_path, "r") as f:
+                return f.read()
         except Exception as e:
             QMessageBox.critical(
                 None, "Error", f"Failed to load utils.py: {e}"

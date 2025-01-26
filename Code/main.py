@@ -5,6 +5,7 @@ from Highlighter import PythonHighlighter
 from PySide6.QtGui import QFont, QTextCursor
 from exec import execute_code, submit_answer
 from utils import Utils
+import config
 
 
 class AoCEditor(QtWidgets.QWidget):
@@ -15,6 +16,8 @@ class AoCEditor(QtWidgets.QWidget):
         self.setWindowTitle("Advent of Code IDE")
 
         self.session_cookie = self.get_session_token()
+        config.TOKEN = self.session_cookie
+
         if not self.session_cookie:
             QtWidgets.QMessageBox.critical(
                 self, "No Session Token", "A valid session token is required to continue."
@@ -90,7 +93,7 @@ class AoCEditor(QtWidgets.QWidget):
         self.part2_panel = QtWidgets.QTextEdit()
         self.utils_panel = QtWidgets.QTextEdit()
 
-        self.utilsEditor = Utils(self.session_cookie, self.utils_panel)
+        self.utilsEditor = Utils(self.utils_panel)
 
         for panel in [self.part1_panel, self.part2_panel, self.utils_panel]:
             panel.setStyleSheet("background-color: #f0f0f0; color: black;")
@@ -301,7 +304,7 @@ class AoCEditor(QtWidgets.QWidget):
             )
             self.hint_box.setPlainText(last_sentence)
 
-    def get_session_token(parent=None, utils=False):
+    def get_session_token(parent=None):
         while True:
             dialog = QtWidgets.QDialog(parent)
             dialog.setWindowTitle("Session Token Required")
@@ -315,14 +318,10 @@ class AoCEditor(QtWidgets.QWidget):
 
             layout = QtWidgets.QVBoxLayout(dialog)
 
-            if not utils:
-                label = QtWidgets.QLabel(
-                    "Please enter your Advent of Code session token (128 characters):"
-                )
-            else:
-                label = QtWidgets.QLabel(
-                    "Due to privacy reasons, please enter your Advent of Code session token (128 characters):"
-                )
+            label = QtWidgets.QLabel(
+                "Please enter your Advent of Code session token (128 characters):"
+            )
+
             layout.addWidget(label)
 
             session_input = QtWidgets.QLineEdit()

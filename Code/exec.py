@@ -2,17 +2,19 @@ from bs4 import BeautifulSoup
 import subprocess
 import time
 import tempfile
-
 import requests
+import config
 
 
 def execute_code(code):
+    utils_file = open(f"user_files/{config.HASHED_TOKEN}/utils.py", "r").read()
     start_time = time.time()
     try:
         if len(code) == 0:
             return "Nothing in the editor to execute :()"
         with tempfile.NamedTemporaryFile('w', suffix='.py') as f:
-            f.write(code)
+            f.write(utils_file)
+            f.write(f"\n\n{code}")
             f.flush()
             result = subprocess.run(['python', f.name], stdin=subprocess.PIPE, capture_output=True,
                                     text=True, timeout=20, encoding='utf-8')
@@ -30,7 +32,6 @@ def execute_code(code):
 
 
 def submit_answer(year, day, part, token, answer, terminal, instance):
-    from main import AoCEditor
     url = f"https://adventofcode.com/{year}/day/{day}/answer"
     headers = {
         'User-Agent': 'AoCode',
