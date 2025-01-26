@@ -32,6 +32,7 @@ def execute_code(code):
 
 
 def submit_answer(year, day, part, token, answer, terminal, instance):
+    terminal.append("Submitting answer: " + answer)
     url = f"https://adventofcode.com/{year}/day/{day}/answer"
     headers = {
         'User-Agent': 'AoCode',
@@ -51,11 +52,10 @@ def submit_answer(year, day, part, token, answer, terminal, instance):
     soup = BeautifulSoup(response.text, 'html.parser')
     p_tag = soup.find('article').find('p')
     article_text = p_tag.text.strip()
-
     colour = "green" if "That's the right answer" in article_text else "red"
 
     terminal.append(f'''<span style="color: {
-        colour};">------<br>{article_text}</span>''')
+        colour};">------{article_text}</span>''')
 
     # Go to part 2 if right so the question can be quickly seen
     if "Answer submitted successfully! That's the right answer." in article_text:
