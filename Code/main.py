@@ -118,6 +118,9 @@ class AoCEditor(QtWidgets.QWidget):
         main_splitter.addWidget(left_widget)
 
         self.year, self.day, self.part = self.get_info()
+        config.CURRENT_DAY = self.day
+        config.CURRENT_YEAR = self.year
+        config.CURRENT_PART = self.part
 
         right_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
 
@@ -166,7 +169,7 @@ class AoCEditor(QtWidgets.QWidget):
 
     def handle_submit_button(self):
         # Handles the submit button action
-        year, day, part = self.get_info()
+        year, day, part = config.CURRENT_DAY, config.CURRENT_YEAR, config.CURRENT_PART
         submit_answer(year, day, part, self.session_cookie,
                       self.terminal.toPlainText(), self.terminal, self)
 
