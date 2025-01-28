@@ -3,6 +3,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from AoCFetcher import fetch_input, fetch_problem, get_last_paragraph
 from Highlighter import PythonHighlighter
 from PySide6.QtGui import QFont, QTextCursor
+from PySide6.QtWidgets import QApplication
 from exec import execute_code, submit_answer
 from utils import Utils
 import config
@@ -205,6 +206,15 @@ class AoCEditor(QtWidgets.QWidget):
 
     def eventFilter(self, obj, event):
         if obj == self.code_editor and event.type() == QtCore.QEvent.KeyPress:
+            if event.key() == QtCore.Qt.Key_V and event.modifiers() == QtCore.Qt.ControlModifier:
+                text = QApplication.clipboard().text()
+                highlighter = PythonHighlighter(obj.document())
+                highlighter.highlightBlock(text)
+                font = QFont("Menlo", 14)
+                obj.setFont(font)
+                obj.insertPlainText(text)
+                return True
+
             if event.key() == QtCore.Qt.Key_Tab:
                 cursor = self.code_editor.textCursor()
                 if cursor.hasSelection():
