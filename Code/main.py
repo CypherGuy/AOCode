@@ -46,18 +46,19 @@ class AoCEditor(QtWidgets.QWidget):
         dropdown_layout.addWidget(QtWidgets.QLabel("Year:"))
 
         self.year_dropdown = QtWidgets.QComboBox()
-        self.year_dropdown.addItems([str(y) for y in range(2015, 2025)])
         current_year = str(QtCore.QDate.currentDate().year())
-        if current_year in [str(y) for y in range(2015, 2025)]:
-            self.year_dropdown.setCurrentText(current_year)
+        self.year_dropdown.addItems([str(y)
+                                    for y in range(2015, int(current_year) + 1)])
+        self.year_dropdown.setCurrentText(
+            str(int(current_year) + 1))
         dropdown_layout.addWidget(self.year_dropdown)
 
         dropdown_layout.addWidget(QtWidgets.QLabel("Day:"))
         self.day_dropdown = QtWidgets.QComboBox()
-        self.day_dropdown.addItems([str(d) for d in range(1, 26)])
         current_day = str(QtCore.QDate.currentDate().day())
-        if current_day in [str(d) for d in range(1, 26)]:
-            self.day_dropdown.setCurrentText(current_day)
+        self.day_dropdown.addItems([str(d) for d in range(1, 26)])
+        self.day_dropdown.setCurrentText(
+            str(current_day) if int(current_day) <= 25 else "1")
         dropdown_layout.addWidget(self.day_dropdown)
 
         self.run_button = QtWidgets.QPushButton(self)
