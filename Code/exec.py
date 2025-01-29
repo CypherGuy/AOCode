@@ -2,19 +2,17 @@ from bs4 import BeautifulSoup
 import subprocess
 import time
 import tempfile
+
 import requests
-import config
 
 
 def execute_code(code):
-    utils_file = open(f"user_files/{config.HASHED_TOKEN}/utils.py", "r").read()
     start_time = time.time()
     try:
         if len(code) == 0:
-            return "Nothing in the editor to execute :()"
+            return "Nothing in the terminal to execute :()"
         with tempfile.NamedTemporaryFile('w', suffix='.py') as f:
-            f.write(utils_file)
-            f.write(f"\n\n{code}")
+            f.write(code)
             f.flush()
             result = subprocess.run(['python', f.name], stdin=subprocess.PIPE, capture_output=True,
                                     text=True, timeout=20, encoding='utf-8')
@@ -28,7 +26,7 @@ def execute_code(code):
                 time_taken = end_time - start_time
                 return f"Process took approximately {time_taken:.4f} seconds\n{result.stderr}"
     except subprocess.TimeoutExpired:
-        return "There's very likely an infinite loop/recursion or a way to do it much quicker. Every solution can be done in under 15 seconds, this has returned after 20."
+        return "There's very likely an infinite loop/recursion or a way to do it much quicker. Every solution can be done in under 15 seconds, this has returned after 60."
 
 
 def submit_answer(year, day, part, token, answer, terminal, instance):
@@ -48,9 +46,28 @@ def submit_answer(year, day, part, token, answer, terminal, instance):
 
     response = requests.post(url, headers=headers, data=data, cookies=cookies)
 
-    # Parse the response.text using BeautifulSoup
+    # Debugging: Print response status and content
+    if response.status_code != 200:
+        terminal.append(f"Error: Received status code {response.status_code}")
+        return
+
     soup = BeautifulSoup(response.text, 'html.parser')
-    p_tag = soup.find('article').find('p')
+    article = soup.find('article')
+
+    # Check if <article> exists before accessing <p>
+    if article is None:
+        terminal.append("Error: Could not find <article> tag in response.")
+        # Print first 1000 characters
+        terminal.append("Response content:\n" + response.text[:1000])
+        return
+
+    p_tag = article.find('p')
+
+    if p_tag is None:
+        terminal.append("Error: Could not find <p> tag inside <article>.")
+        terminal.append("Article content:\n" + article.prettify())
+        return
+
     article_text = p_tag.text.strip()
     colour = "green" if "That's the right answer" in article_text else "red"
 

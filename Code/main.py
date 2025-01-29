@@ -190,7 +190,7 @@ class AoCEditor(QtWidgets.QWidget):
 
     def handle_submit_button(self):
         # Handles the submit button action
-        year, day, part = config.CURRENT_DAY, config.CURRENT_YEAR, config.CURRENT_PART
+        year, day, part = config.CURRENT_YEAR, config.CURRENT_DAY, config.CURRENT_PART
         submit_answer(year, day, part, self.session_cookie,
                       self.terminal.toPlainText(), self.terminal, self)
 
@@ -312,6 +312,9 @@ class AoCEditor(QtWidgets.QWidget):
         year = self.year_dropdown.currentText()
         day = self.day_dropdown.currentText()
 
+        config.CURRENT_YEAR = year
+        config.CURRENT_DAY = day
+
         part1_text, part2_text = fetch_problem(year, day, self.session_cookie)
 
         self.part1_panel.setPlainText(part1_text)
@@ -327,11 +330,13 @@ class AoCEditor(QtWidgets.QWidget):
 
     def update_hint(self, index):
         if index == 0:
+            config.CURRENT_PART = 1
             last_sentence = get_last_paragraph(
                 self.part1_panel.toPlainText()
             )
             self.hint_box.setPlainText(last_sentence)
         elif index == 1:
+            config.CURRENT_PART = 2
             last_sentence = get_last_paragraph(
                 self.part2_panel.toPlainText()
             )

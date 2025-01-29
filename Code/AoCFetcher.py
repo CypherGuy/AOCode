@@ -20,7 +20,6 @@ def fetch_problem(year, day, session_cookie):
 
         return [part.text if hasattr(part, 'text') else part for part in parts[:2]]
     else:
-        print(f"Failed to fetch problem for {year} day {day}.")
         return ["Could not fetch Part 1. Maybe it's locked?", "Could not fetch Part 2. Maybe it's locked?"]
 
 
@@ -37,7 +36,6 @@ def fetch_input(year, day, session_cookie=None):
 
     session.cookies.set('session', session_cookie, domain='adventofcode.com')
     response = session.get(url)
-    print(response.status_code)
 
     if response.status_code == 200:
         return response.text
