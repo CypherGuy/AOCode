@@ -29,7 +29,7 @@ class AoCEditor(QtWidgets.QWidget):
 
         main_layout = QtWidgets.QVBoxLayout(self)
 
-        # Row 1: Hint, Dropdowns, Run Button
+        # Row 1: Hint, Settings, Dropdowns, Run Button
         row1_layout = QtWidgets.QGridLayout()
         row1_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -82,13 +82,11 @@ class AoCEditor(QtWidgets.QWidget):
         self.run_button.setIconSize(QtCore.QSize(40, 40))
         dropdown_layout.addWidget(self.run_button)
 
-        # Execute code and put output in terminal after pressing run button
         self.run_button.clicked.connect(self.run_code)
 
         row1_layout.addLayout(dropdown_layout, 0, 1)
         main_layout.addLayout(row1_layout)
 
-        # Add Submit button next to the Run button
         self.submit_button = QtWidgets.QPushButton(self)
         self.submit_button.setFixedSize(80, 50)
         self.submit_button.setText("Submit")

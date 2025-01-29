@@ -1,9 +1,12 @@
+# Thanks Ellis for the idea!
+
 import os
 import json
 import hashlib
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QComboBox, QPushButton, QMessageBox, QSplitter
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
+import config
 
 
 class Preferences(QWidget):
@@ -93,7 +96,6 @@ class Preferences(QWidget):
 
     def load_file(self):
         try:
-
             with open(self.preferences_path, "r") as f:
                 preferences = json.load(f)
 
@@ -104,11 +106,14 @@ class Preferences(QWidget):
             self.console_theme.setCurrentText(
                 preferences["console_preferences"]["Theme"])
 
-        except Exception as e:
-            QMessageBox.critical(
-                None, "Error", f"Failed to load Preferences.py in load_file: {
+        except FileNotFoundError as e:
+            QMessageBox.warning(
+                self, "Could not load Preferences", f"Failed to load preferences. Error: {
                     e}"
             )
+            self.editor_font.setCurrentText("Menlo")
+            self.editor_theme.setCurrentText("Default")
+            self.console_theme.setCurrentText("Default")
 
     def get_content(self):
         try:
@@ -138,6 +143,10 @@ class Preferences(QWidget):
                 json.dump(preferences, f, indent=4)
             self.apply_editor_preferences()
             self.apply_console_preferences()
+
+            # Inspired by a friend
+            QMessageBox.information(
+                self, "Success", "Preferences saved successfully!")
             self.close()
 
         except Exception as e:
@@ -164,18 +173,7 @@ class Preferences(QWidget):
 
         self.editor.setFont(fontType)
 
-        if theme == "Dark":
-            self.editor.setStyleSheet(
-                "background-color: #1E1E1E; color: #FFFFFF;")
-        elif theme == "Light":
-            self.editor.setStyleSheet(
-                "background-color: #FFFFFF; color: #000000;")
-        elif theme == "Solarized":
-            self.editor.setStyleSheet(
-                "background-color: #002b36; color: #839496;")
-        else:
-            self.editor.setStyleSheet(
-                "background-color: #ffffff; color: black;")
+        self.editor.setStyleSheet(config.THEMES[theme])
 
     def apply_console_preferences(self):
         """Apply preferences to the console (GUI)."""
@@ -187,15 +185,4 @@ class Preferences(QWidget):
         font.setFixedPitch(True)
         self.console.setFont(font)
 
-        if theme == "Dark":
-            self.console.setStyleSheet(
-                "background-color: #1E1E1E; color: #FFFFFF;")
-        elif theme == "Light":
-            self.console.setStyleSheet(
-                "background-color: #FFFFFF; color: #000000;")
-        elif theme == "Solarized":
-            self.console.setStyleSheet(
-                "background-color: #002b36; color: #839496;")
-        else:
-            self.console.setStyleSheet(
-                "background-color: #303030; color: white;")
+        self.console.setStyleSheet(config.THEMES[theme])
