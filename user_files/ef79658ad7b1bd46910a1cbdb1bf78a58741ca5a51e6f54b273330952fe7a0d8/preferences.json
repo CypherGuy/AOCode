@@ -1,4 +1,9 @@
 {
-    "Theme": "Solarized",
-    "Font": "Menlo"
+    "code_editor_preferences": {
+        "Theme": "Dark",
+        "Font": "Menlo"
+    },
+    "console_preferences": {
+        "Theme": "Default"
+    }
 }

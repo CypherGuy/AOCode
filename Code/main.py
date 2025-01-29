@@ -56,6 +56,7 @@ class AoCEditor(QtWidgets.QWidget):
         dropdown_layout.addWidget(QtWidgets.QLabel("Year:"))
 
         self.year_dropdown = QtWidgets.QComboBox()
+        self.year_dropdown.setFixedWidth(70)
         current_year = str(QtCore.QDate.currentDate().year())
         self.year_dropdown.addItems([str(y)
                                     for y in range(2015, int(current_year) + 1)])
@@ -65,6 +66,7 @@ class AoCEditor(QtWidgets.QWidget):
 
         dropdown_layout.addWidget(QtWidgets.QLabel("Day:"))
         self.day_dropdown = QtWidgets.QComboBox()
+        self.day_dropdown.setFixedWidth(58)
         current_day = str(QtCore.QDate.currentDate().day())
         self.day_dropdown.addItems([str(d) for d in range(1, 26)])
         self.day_dropdown.setCurrentText(
@@ -139,14 +141,10 @@ class AoCEditor(QtWidgets.QWidget):
         self.code_editor = QtWidgets.QTextEdit()
         self.code_editor.setPlaceholderText("Write your code here...")
         self.preferences_panel = Preferences.Preferences(
-            self.code_editor, token=config.TOKEN)
-
-        font = QFont("Menlo", 14)
-        font.setFixedPitch(True)
-        self.code_editor.setFont(font)
+            editor=self.code_editor, console=self, token=config.TOKEN)
 
         # Set tab width to exactly 4 spaces
-        metrics = QtGui.QFontMetrics(font)
+        metrics = QtGui.QFontMetrics(QFont("Arial", 12))
         self.code_editor.setTabStopDistance(metrics.horizontalAdvance(' ') * 4)
 
         right_splitter.addWidget(self.code_editor)
