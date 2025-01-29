@@ -2,11 +2,13 @@ import sys
 from PySide6 import QtWidgets, QtCore, QtGui
 from AoCFetcher import fetch_input, fetch_problem, get_last_paragraph
 from Highlighter import PythonHighlighter
-from PySide6.QtGui import QFont, QTextCursor
+from PySide6.QtGui import QFont, QTextCursor, QIcon
 from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QSize
 from exec import execute_code, submit_answer
 from utils import Utils
 import config
+import Preferences
 
 
 class AoCEditor(QtWidgets.QWidget):
@@ -43,6 +45,14 @@ class AoCEditor(QtWidgets.QWidget):
 
         dropdown_layout = QtWidgets.QHBoxLayout()
         dropdown_layout.addStretch(1)
+
+        self.settings_button = QtWidgets.QPushButton(self)
+        self.settings_button.clicked.connect(self.open_preferences)
+        self.settings_button.setIcon(QIcon("Code/images/cog.png"))
+        self.settings_button.setIconSize(QSize(24, 24))
+        self.settings_button.setFixedSize(32, 32)
+        dropdown_layout.addWidget(self.settings_button)
+
         dropdown_layout.addWidget(QtWidgets.QLabel("Year:"))
 
         self.year_dropdown = QtWidgets.QComboBox()
@@ -128,8 +138,8 @@ class AoCEditor(QtWidgets.QWidget):
 
         self.code_editor = QtWidgets.QTextEdit()
         self.code_editor.setPlaceholderText("Write your code here...")
-        self.code_editor.setStyleSheet(
-            "background-color: #1E1E1E; color: #FFFFFF;")
+        self.preferences_panel = Preferences.Preferences(
+            self.code_editor, token=config.TOKEN)
 
         font = QFont("Menlo", 14)
         font.setFixedPitch(True)
@@ -158,6 +168,7 @@ class AoCEditor(QtWidgets.QWidget):
         self.setLayout(main_layout)
 
         self.code_editor.installEventFilter(self)
+        self.preferences_panel.editor = self.code_editor
 
         self.year_dropdown.currentIndexChanged.connect(
             self.update_problem_description
@@ -168,6 +179,9 @@ class AoCEditor(QtWidgets.QWidget):
 
         self.update_problem_description()
         self.problem_tabs.currentChanged.connect(self.update_hint)
+
+    def open_preferences(self):
+        self.preferences_panel.show()
 
     def handle_submit_button(self):
         # Handles the submit button action
