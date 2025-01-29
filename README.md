@@ -152,13 +152,13 @@ Created by CypherGuy. Feel free to contribute or reach out!
 
 ## Screenshots
 
-<img width="1197" alt="AOCode IDE interface displaying problem statement, code editor, and output panel for Advent of Code." src="https://github.com/user-attachments/assets/350a1c26-ea43-41e3-aa4c-17c750937f40" />
+<img width="1100" alt="AOCode IDE interface displaying problem statement, code editor, and output panel for Advent of Code." src="https://github.com/user-attachments/assets/350a1c26-ea43-41e3-aa4c-17c750937f40" />
 *AOCode IDE interface displaying problem statement, code editor, and output panel for Advent of Code.*
 
-<img width="1201" alt="Getting the wrong answer on the IDE" src="https://github.com/user-attachments/assets/e3826c07-1613-4bcd-b391-d72219a7292a" />
+<img width="1100" alt="Getting the wrong answer on the IDE" src="https://github.com/user-attachments/assets/e3826c07-1613-4bcd-b391-d72219a7292a" />
 *Getting the wrong answer on the IDE*
 
-<img width="848" alt="Preferences dialog to change how the IDE looks" src="https://github.com/user-attachments/assets/69928fc2-127b-42a7-a179-44459b9eb162" />
+<img width="1100" alt="Preferences dialog to change how the IDE looks" src="https://github.com/user-attachments/assets/69928fc2-127b-42a7-a179-44459b9eb162" />
 *Preferences dialog to change how the IDE looks*
 
 
