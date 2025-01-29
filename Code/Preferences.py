@@ -27,6 +27,8 @@ class Preferences(QWidget):
         splitter = QSplitter(Qt.Horizontal)
 
         main_layout = QVBoxLayout()
+        main_layout.addWidget(
+            QLabel("Here you can preview and save your preferences"))
         main_layout.addWidget(splitter)
 
         splitter.addWidget(self.create_editor_preferences_panel())

@@ -47,7 +47,7 @@ class AoCEditor(QtWidgets.QWidget):
         dropdown_layout.addStretch(1)
 
         self.settings_button = QtWidgets.QPushButton(self)
-        self.settings_button.clicked.connect(self.open_preferences)
+        self.settings_button.clicked.connect(self.toggle_preferences)
         self.settings_button.setIcon(QIcon("Code/images/cog.png"))
         self.settings_button.setIconSize(QSize(24, 24))
         self.settings_button.setFixedSize(32, 32)
@@ -56,7 +56,7 @@ class AoCEditor(QtWidgets.QWidget):
         dropdown_layout.addWidget(QtWidgets.QLabel("Year:"))
 
         self.year_dropdown = QtWidgets.QComboBox()
-        self.year_dropdown.setFixedWidth(70)
+        self.year_dropdown.setFixedWidth(77)
         current_year = str(QtCore.QDate.currentDate().year())
         self.year_dropdown.addItems([str(y)
                                     for y in range(2015, int(current_year) + 1)])
@@ -178,8 +178,17 @@ class AoCEditor(QtWidgets.QWidget):
         self.update_problem_description()
         self.problem_tabs.currentChanged.connect(self.update_hint)
 
+    def toggle_preferences(self):
+        if self.preferences_panel.isVisible():
+            self.close_preferences()
+        else:
+            self.open_preferences()
+
     def open_preferences(self):
         self.preferences_panel.show()
+
+    def close_preferences(self):
+        self.preferences_panel.close()
 
     def handle_submit_button(self):
         # Handles the submit button action
