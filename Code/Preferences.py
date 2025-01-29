@@ -108,8 +108,7 @@ class Preferences(QWidget):
 
         except FileNotFoundError as e:
             QMessageBox.warning(
-                self, "Could not load Preferences", f"Failed to load preferences. Error: {
-                    e}"
+                self, "Could not load Preferences", f"Failed to load preferences. Error: {e}"
             )
             self.editor_font.setCurrentText("Menlo")
             self.editor_theme.setCurrentText("Default")
@@ -121,8 +120,7 @@ class Preferences(QWidget):
                 return f.read()
         except Exception as e:
             QMessageBox.critical(
-                None, "Error", f"Failed to load Preferences.py in get_content: {
-                    e}"
+                None, "Error", f"Failed to load Preferences.py in get_content: {e}"
             )
 
     def save_file(self):

@@ -16,7 +16,7 @@ class AoCEditor(QtWidgets.QWidget):
         super().__init__()
 
         self.resize(1200, 1000)
-        self.setWindowTitle("Advent of Code IDE")
+        self.setWindowTitle("AoCode")
 
         self.session_cookie = self.get_session_token()
         config.TOKEN = self.session_cookie
