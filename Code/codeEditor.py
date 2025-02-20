@@ -87,7 +87,7 @@ class PythonHighlighter(QSyntaxHighlighter):
 
         self.integer_regex = re.compile(r'\b\d+\b')
 
-    def highlightBlock(self, text: str):
+    def highlightBlock(self, text: str) -> None:
         """
         A single-pass state machine that tracks multiline/unclosed strings across lines.
         """
@@ -255,24 +255,21 @@ class PythonHighlighter(QSyntaxHighlighter):
                         ) - match.start(), self.integer_format)
                         i = match.end()
 
-    def highlight_keywords_and_class_names(self, text, start_pos, end_pos):
-        """
-        Parses the text chunk [start_pos:end_pos]
-        """
-        i = start_pos
+    def highlight_keywords_and_class_names(self, text: str, start_pos: int, end_pos: int) -> None:
+        i: int = start_pos
 
         while i < end_pos:
-            ch = text[i]
+            ch: str = text[i]
 
             if not (ch.isalpha() or ch == '_'):
                 i += 1
                 continue
 
             # Start of a word
-            start_word = i
+            start_word: int = i
             while i < end_pos and (text[i].isalnum() or text[i] == '_'):
                 i += 1
-            word = text[start_word:i]
+            word: str = text[start_word:i]
 
             # Is it a class?
             if self.waiting_for_class_name:
@@ -286,11 +283,7 @@ class PythonHighlighter(QSyntaxHighlighter):
                     if word == "class":
                         self.waiting_for_class_name = True
 
-    def find_unescaped_quote(self, text, quote_char, start):
-        """
-        Finds the next unescaped quote character.
-        Returns the index or -1 if not found.
-        """
+    def find_unescaped_quote(self, text: str, quote_char: str, start: int) -> int:
         i = start
         while i < len(text):
             if text[i] == '\\':
@@ -301,7 +294,7 @@ class PythonHighlighter(QSyntaxHighlighter):
             i += 1
         return -1
 
-    def highlight_brackets(self, text):
+    def highlight_brackets(self, text: str) -> None:
         brackets = "()[]{}"
         for idx, ch in enumerate(text):
             if ch in brackets:

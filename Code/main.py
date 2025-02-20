@@ -1,10 +1,11 @@
 import sys
+from typing import List, Optional
 from PySide6 import QtWidgets, QtCore, QtGui
 from AoCFetcher import fetch_input, fetch_problem, get_last_paragraph
 from Highlighter import PythonHighlighter
 from PySide6.QtGui import QFont, QTextCursor, QIcon
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize, QObject
 from exec import execute_code, submit_answer
 from utils import Utils
 import config
@@ -12,13 +13,13 @@ import Preferences
 
 
 class AoCEditor(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.resize(1200, 1000)
         self.setWindowTitle("AoCode")
 
-        self.session_cookie = self.get_session_token()
+        self.session_cookie: str = self.get_session_token()
         config.TOKEN = self.session_cookie
 
         if not self.session_cookie:
@@ -27,13 +28,13 @@ class AoCEditor(QtWidgets.QWidget):
             )
             QtWidgets.QApplication.instance().quit()
 
-        main_layout = QtWidgets.QVBoxLayout(self)
+        main_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(self)
 
         # Row 1: Hint, Settings, Dropdowns, Run Button
-        row1_layout = QtWidgets.QGridLayout()
+        row1_layout: QtWidgets.QGridLayout = QtWidgets.QGridLayout()
         row1_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.hint_box = QtWidgets.QTextEdit()
+        self.hint_box: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
         self.hint_box.setReadOnly(True)
         self.hint_box.setFixedHeight(50)
         self.hint_box.setFixedWidth(500)
@@ -43,10 +44,11 @@ class AoCEditor(QtWidgets.QWidget):
 
         row1_layout.addWidget(self.hint_box, 0, 0)
 
-        dropdown_layout = QtWidgets.QHBoxLayout()
+        dropdown_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
         dropdown_layout.addStretch(1)
 
-        self.settings_button = QtWidgets.QPushButton(self)
+        self.settings_button: QtWidgets.QPushButton = QtWidgets.QPushButton(
+            self)
         self.settings_button.clicked.connect(self.toggle_preferences)
         self.settings_button.setIcon(QIcon("Code/images/cog.png"))
         self.settings_button.setIconSize(QSize(24, 24))
@@ -55,9 +57,9 @@ class AoCEditor(QtWidgets.QWidget):
 
         dropdown_layout.addWidget(QtWidgets.QLabel("Year:"))
 
-        self.year_dropdown = QtWidgets.QComboBox()
+        self.year_dropdown: QtWidgets.QComboBox = QtWidgets.QComboBox()
         self.year_dropdown.setFixedWidth(77)
-        current_year = str(QtCore.QDate.currentDate().year())
+        current_year: str = str(QtCore.QDate.currentDate().year())
         self.year_dropdown.addItems([str(y)
                                     for y in range(2015, int(current_year) + 1)])
         self.year_dropdown.setCurrentText(
@@ -65,15 +67,15 @@ class AoCEditor(QtWidgets.QWidget):
         dropdown_layout.addWidget(self.year_dropdown)
 
         dropdown_layout.addWidget(QtWidgets.QLabel("Day:"))
-        self.day_dropdown = QtWidgets.QComboBox()
+        self.day_dropdown: QtWidgets.QComboBox = QtWidgets.QComboBox()
         self.day_dropdown.setFixedWidth(58)
-        current_day = str(QtCore.QDate.currentDate().day())
+        current_day: str = str(QtCore.QDate.currentDate().day())
         self.day_dropdown.addItems([str(d) for d in range(1, 26)])
         self.day_dropdown.setCurrentText(
             str(current_day) if int(current_day) <= 25 else "1")
         dropdown_layout.addWidget(self.day_dropdown)
 
-        self.run_button = QtWidgets.QPushButton(self)
+        self.run_button: QtWidgets.QPushButton = QtWidgets.QPushButton(self)
         self.run_button.setFixedSize(50, 50)
         self.run_button.setStyleSheet(
             "border-radius: 25px; background-color: lightgray;"
@@ -87,25 +89,26 @@ class AoCEditor(QtWidgets.QWidget):
         row1_layout.addLayout(dropdown_layout, 0, 1)
         main_layout.addLayout(row1_layout)
 
-        self.submit_button = QtWidgets.QPushButton(self)
+        self.submit_button: QtWidgets.QPushButton = QtWidgets.QPushButton(self)
         self.submit_button.setFixedSize(80, 50)
         self.submit_button.setText("Submit")
         self.submit_button.clicked.connect(self.handle_submit_button)
         dropdown_layout.addWidget(self.submit_button)
 
         # Row 2: Problem Description and Code/Terminal Section
-        main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        main_splitter: QtWidgets.QSplitter = QtWidgets.QSplitter(
+            QtCore.Qt.Horizontal)
 
-        left_widget = QtWidgets.QWidget()
-        left_layout = QtWidgets.QVBoxLayout(left_widget)
+        left_widget: QtWidgets.QWidget = QtWidgets.QWidget()
+        left_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(left_widget)
         left_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.problem_tabs = QtWidgets.QTabWidget()
-        self.part1_panel = QtWidgets.QTextEdit()
-        self.part2_panel = QtWidgets.QTextEdit()
-        self.utils_panel = QtWidgets.QTextEdit()
+        self.problem_tabs: QtWidgets.QTabWidget = QtWidgets.QTabWidget()
+        self.part1_panel: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
+        self.part2_panel: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
+        self.utils_panel: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
 
-        self.utilsEditor = Utils(self.utils_panel)
+        self.utilsEditor: Utils = Utils(self.utils_panel)
 
         for panel in [self.part1_panel, self.part2_panel, self.utils_panel]:
             panel.setStyleSheet("background-color: #f0f0f0; color: black;")
@@ -116,7 +119,7 @@ class AoCEditor(QtWidgets.QWidget):
         self.part1_panel.setReadOnly(True)
         self.part2_panel.setReadOnly(True)
 
-        self.input_panel = QtWidgets.QTextEdit()
+        self.input_panel: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
         self.input_panel.setStyleSheet(
             "background-color: #ffffff; color: black;"
         )
@@ -129,26 +132,31 @@ class AoCEditor(QtWidgets.QWidget):
         left_layout.addWidget(self.problem_tabs)
         main_splitter.addWidget(left_widget)
 
+        self.year: int
+        self.day: int
+        self.part: str
         self.year, self.day, self.part = self.get_info()
         config.CURRENT_DAY = self.day
         config.CURRENT_YEAR = self.year
         config.CURRENT_PART = self.part
 
-        right_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        right_splitter: QtWidgets.QSplitter = QtWidgets.QSplitter(
+            QtCore.Qt.Vertical)
 
-        self.code_editor = QtWidgets.QTextEdit()
+        self.code_editor: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
         self.code_editor.setPlaceholderText("Write your code here...")
-        self.preferences_panel = Preferences.Preferences(
+        self.preferences_panel: Preferences.Preferences = Preferences.Preferences(
             editor=self.code_editor, console=self, token=config.TOKEN)
 
         # Set tab width to exactly 4 spaces
-        metrics = QtGui.QFontMetrics(QFont("Arial", 12))
+        metrics: QtGui.QFontMetrics = QtGui.QFontMetrics(QFont("Arial", 12))
         self.code_editor.setTabStopDistance(metrics.horizontalAdvance(' ') * 4)
 
         right_splitter.addWidget(self.code_editor)
-        self.highlighter = PythonHighlighter(self.code_editor.document())
+        self.highlighter: PythonHighlighter = PythonHighlighter(
+            self.code_editor.document())
 
-        self.terminal = QtWidgets.QTextEdit()
+        self.terminal: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
         self.terminal.setPlaceholderText("Output will appear here...")
         self.terminal.setReadOnly(True)
         self.terminal.setStyleSheet(
@@ -182,23 +190,20 @@ class AoCEditor(QtWidgets.QWidget):
         else:
             self.open_preferences()
 
-    def open_preferences(self):
+    def open_preferences(self) -> None:
         self.preferences_panel.show()
 
-    def close_preferences(self):
+    def close_preferences(self) -> None:
         self.preferences_panel.close()
 
-    def handle_submit_button(self):
+    def handle_submit_button(self) -> None:
         # Handles the submit button action
         year, day, part = config.CURRENT_YEAR, config.CURRENT_DAY, config.CURRENT_PART
         submit_answer(year, day, part, self.session_cookie,
                       self.terminal.toPlainText(), self.terminal, self)
 
-    def get_info(self):
-        # Get the currently selected tab index
+    def get_info(self) -> tuple[int, int, str] | str | None:
         current_tab = self.problem_tabs.currentIndex()
-
-        # Determine the part based on the index
         if current_tab == 0:
             part = "1"
         elif current_tab == 1:
@@ -209,22 +214,17 @@ class AoCEditor(QtWidgets.QWidget):
             )
             return
 
-        # Retrieve year and day
         year = self.year_dropdown.currentText()
         day = self.day_dropdown.currentText()
         return year, day, part
 
-    def run_code(self):
-        code = self.code_editor.toPlainText().strip()
+    def run_code(self, code: str) -> str:
+        if not code.strip():
+            return "Error: No code to execute!"
 
-        if not code:
-            self.terminal.setPlainText("Error: No code to execute!")
-            return
+        return execute_code(code)
 
-        output = execute_code(code)
-        self.terminal.setPlainText(output)
-
-    def eventFilter(self, obj, event):
+    def eventFilter(self, obj: QObject, event: QtCore.QEvent) -> bool:
         if obj == self.code_editor and event.type() == QtCore.QEvent.KeyPress:
             match event.key():
                 case QtCore.Qt.Key_V if event.modifiers() == QtCore.Qt.ControlModifier:
@@ -309,27 +309,30 @@ class AoCEditor(QtWidgets.QWidget):
                 break
         return indentation
 
-    def update_problem_description(self):
-        year = self.year_dropdown.currentText()
-        day = self.day_dropdown.currentText()
+    def update_problem_description(self) -> None:
+        year: str = self.year_dropdown.currentText()
+        day: str = self.day_dropdown.currentText()
 
         config.CURRENT_YEAR = year
         config.CURRENT_DAY = day
 
-        part1_text, part2_text = fetch_problem(year, day, self.session_cookie)
+        part1_text: str
+        part2_text: str
+        part1_text, part2_text = fetch_problem(
+            int(year), int(day), self.session_cookie)
 
         self.part1_panel.setPlainText(part1_text)
         self.part2_panel.setPlainText(part2_text)
 
-        user_input = fetch_input(year, day, self.session_cookie)
+        user_input: str = fetch_input(int(year), int(day), self.session_cookie)
         self.input_panel.setPlainText(user_input)
 
-        last_sentence = get_last_paragraph(part1_text)
+        last_sentence: str = get_last_paragraph(part1_text)
         self.hint_box.setPlainText(last_sentence)
 
         self.problem_tabs.setCurrentIndex(0)
 
-    def update_hint(self, index):
+    def update_hint(self, index: int) -> None:
         if index == 0:
             config.CURRENT_PART = 1
             last_sentence = get_last_paragraph(
@@ -343,7 +346,7 @@ class AoCEditor(QtWidgets.QWidget):
             )
             self.hint_box.setPlainText(last_sentence)
 
-    def get_session_token(parent=None):
+    def get_session_token(parent: Optional[QtWidgets.QWidget] = None) -> str:
         while True:
             dialog = QtWidgets.QDialog(parent)
             dialog.setWindowTitle("Session Token Required")
@@ -371,10 +374,10 @@ class AoCEditor(QtWidgets.QWidget):
             submit_button = QtWidgets.QPushButton("Submit")
             layout.addWidget(submit_button)
 
-            valid_token = [None]
+            valid_token: List[Optional[str]] = [None]
 
-            def handle_submit():
-                token = session_input.text().strip()
+            def handle_submit() -> None:
+                token: str = session_input.text().strip()
                 if len(token) == 128 and token.isalnum():
                     valid_token[0] = token
                     dialog.accept()
@@ -390,12 +393,12 @@ class AoCEditor(QtWidgets.QWidget):
             if valid_token[0]:
                 return valid_token[0]
 
-    def create_triangle_icon(self):
+    def create_triangle_icon(self) -> QtGui.QIcon:
         pixmap = QtGui.QPixmap(50, 50)
-        pixmap.fill(QtCore.Qt.transparent)
+        pixmap.fill(QtCore.Qt.GlobalColor.transparent)
         painter = QtGui.QPainter(pixmap)
         painter.setBrush(QtGui.QBrush(QtGui.QColor("black")))
-        painter.setPen(QtCore.Qt.NoPen)
+        painter.setPen(QtCore.Qt.PenStyle.NoPen)
         points = [
             QtCore.QPoint(10, 10),
             QtCore.QPoint(40, 25),

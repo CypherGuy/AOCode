@@ -95,7 +95,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         self.function_regex = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_]*(?=\()')
         self.self_regex = re.compile(r'\bself.')
 
-    def highlightBlock(self, text: str):
+    def highlightBlock(self, text: str) -> None:
         """
         A single-pass state machine that tracks multiline/unclosed strings across lines.
         """
@@ -292,7 +292,8 @@ class PythonHighlighter(QSyntaxHighlighter):
                     self.highlight_keywords_and_class_names(text, i, length)
                     break
 
-    def highlight_keywords_and_class_names(self, text, start_pos, end_pos):
+    def highlight_keywords_and_class_names(self, text: str, start_pos: int, end_pos: int
+                                           ) -> None:
         """
         Parses the text chunk [start_pos:end_pos]
         """
@@ -323,7 +324,7 @@ class PythonHighlighter(QSyntaxHighlighter):
                     if word == "class":
                         self.waiting_for_class_name = True
 
-    def find_unescaped_quote(self, text, quote_char, start):
+    def find_unescaped_quote(self, text: str, quote_char: str, start: int) -> int:
         """
         Finds the next unescaped quote character.
         Returns the index or -1 if not found.
@@ -338,7 +339,7 @@ class PythonHighlighter(QSyntaxHighlighter):
             i += 1
         return -1
 
-    def highlight_brackets(self, text):
+    def highlight_brackets(self, text: str) -> None:
         brackets = "()[]{}"
         for idx, ch in enumerate(text):
             if ch in brackets:

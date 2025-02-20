@@ -1,3 +1,5 @@
+from typing import Optional
+from PySide6 import QtWidgets
 from bs4 import BeautifulSoup
 import subprocess
 import time
@@ -6,7 +8,10 @@ import tempfile
 import requests
 
 
-def execute_code(code):
+from typing import Union
+
+
+def execute_code(code: str) -> Union[str, None]:
     start_time = time.time()
     try:
         if len(code) == 0:
@@ -29,7 +34,7 @@ def execute_code(code):
         return "There's very likely an infinite loop/recursion or a way to do it much quicker. Every solution can be done in under 15 seconds, this has returned after 60."
 
 
-def submit_answer(year, day, part, token, answer, terminal, instance):
+def submit_answer(year: int, day: int, part: str, token: str, answer: str, terminal: QtWidgets.QTextEdit, instance: object) -> None:
     terminal.append("Submitting answer: " + answer)
     url = f"https://adventofcode.com/{year}/day/{day}/answer"
     headers = {

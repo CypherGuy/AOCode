@@ -2,7 +2,10 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def fetch_problem(year, day, session_cookie):
+from typing import List, Tuple
+
+
+def fetch_problem(year: int, day: int, session_cookie: str) -> Tuple[List[str], str]:
     url = f"https://adventofcode.com/{year}/day/{day}"
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -13,10 +16,8 @@ def fetch_problem(year, day, session_cookie):
     s.cookies.set("session", session_cookie)
     response = s.get(url)
 
-    print(response.text)
-
     if response.status_code != 200:
-        return ["Could not fetch Part 1. Maybe it's locked?", "Could not fetch Part 2. Maybe it's locked?"]
+        return ["", ""], "Could not fetch Part 1. Maybe it's locked?"
 
     soup = BeautifulSoup(response.text, "html.parser")
     articles = soup.find_all("article")
@@ -26,15 +27,15 @@ def fetch_problem(year, day, session_cookie):
         if article.text:
             parts.append(article.text)
         else:
-            parts.append("No Part found")
+            parts.append("")
 
     parts = parts[:2]
     if len(parts) < 2:
-        parts.append("Part 2 not unlocked yet.")
-    return parts
+        parts.append("")
+    return parts, ""
 
 
-def fetch_input(year, day, session_cookie):
+def fetch_input(year: int, day: int, session_cookie: str) -> str:
     url = f"https://adventofcode.com/{year}/day/{day}/input"
     session = requests.Session()
 
@@ -51,6 +52,6 @@ def fetch_input(year, day, session_cookie):
         return f"Failed to fetch input for {year} day {day}. Are you sure it's unlocked?"
 
 
-def get_last_paragraph(text):
+def get_last_paragraph(text: str) -> str:
     paragraphs = [p for p in text.split('\n') if p.strip()]
     return paragraphs[-1] if paragraphs else ''
