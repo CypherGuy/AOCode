@@ -1,13 +1,13 @@
 # AoCode - Advent of Code IDE
 
-AoCode is a lightweight Python-based Integrated Development Environment (IDE) designed for Advent of Code, built to solve challenges as efficiently and quickly as possible. 
+AoCode is a lightweight Python-based Integrated Development Environment (IDE) designed for Advent of Code, built to solve challenges as efficiently and quickly as possible.
 It provides an efficient interface for writing, running, and submitting solutions with built-in syntax highlighting, automated input fetching, and custom preferences.
 
 ## Why AoCode?
 
-As someone who participates in Advent of Code, I want a way to streamline my code with a fast yet efficient way to submit answers and have quick access to any helper functions 
-I've created. AoCode solves this by keeping everything you need — the question, code editor, and utilities — just one click away. There's no need to even open the 
-Advent of Code website, as the IDE fetches the problem statement and input for you. I also built this project to challenge my way of thinking and experiment with new libraries 
+As someone who participates in Advent of Code, I want a way to streamline my code with a fast yet efficient way to submit answers and have quick access to any helper functions
+I've created. AoCode solves this by keeping everything you need — the question, code editor, and utilities — just one click away. There's no need to even open the
+Advent of Code website, as the IDE fetches the problem statement and input for you. I also built this project to challenge my way of thinking and experiment with new libraries
 I haven't used before.
 
 ## Features
@@ -30,25 +30,29 @@ I haven't used before.
 git clone git@github.com:CypherGuy/AOCode.git
 cd AOCode
 ```
+
 2. Install dependencies:
-   
+
 ```
 pip install -r requirements.txt
 ```
 
 **Current Development Dependencies:**
+
 ```
 PySide6>=6.8.1
 requests>=2.32
 beautifulsoup4>=4.1
 ```
-*(Note: These versions are flexible to allow updates as the project evolves.)*
+
+_(Note: These versions are flexible to allow updates as the project evolves.)_
 
 3. Run the application:
 
 ```
 python main.py
 ```
+
 And you're done!
 
 ## Usage
@@ -87,7 +91,8 @@ AOCode/
 │-- requirements.txt # Dependencies for the project
 │-- utils.py # Utility functions for problem solving
 ```
-There is also a folder called user_files. What this is will be explained later, but essentially it's a file structure to store user preferences and their utility files, 
+
+There is also a folder called user_files. What this is will be explained later, but essentially it's a file structure to store user preferences and their utility files,
 identified by their token which is hashed via SHA256 and stored as the folder name. The one you see is a mimic to show what it would look like.
 
 ## Technologies Used
@@ -96,42 +101,6 @@ identified by their token which is hashed via SHA256 and stored as the folder na
 - **Web Scraping**: requests, BeautifulSoup4
 - **Syntax Highlighting**: Just pure Python!
 - **JSON Storage**: For storing user preferences. I plan to shift this over to a NoSQL Database in the future
-
-## Why This Project Matters
-
-AOCode is a demonstration of my skills in GUI development, API integration, real-world problem-solving and most importantly, a demonstration of I work with new technologies. AoCode 
-showcases my ability to develop simplistic yet feature-heavy user interfaces and efficiently interact with external data sources based on what users of Advent of Code want.
-
-## Key Technical Challenges & Solutions
-
-### Syntax Highlighting
-
-Over the course of development, the hardest thing for me was getting the string highlighting correct, for example text between a triple quote and a single quote not being 
-highlighted when it should be green, or in the case of nested, unclosed quotes highlighting in blue (for classes). With a lot of edge cases to consider, I had to put two 
-weeks towards highlighting alone. 
-
-I ended up solving the majority of edge cases by implementing a custom state-based syntax highlighter that tracks whether the editor is 
-currently inside a string and what type of string it is. This approach ensures that highlighting remains accurate even as the user types dynamically, making the 
-experience much smoother and more intuitive.
-
-### User Utility Functions
-
-Another issue I struggled with was how I could have a custom file for utility functions specific to each user. Initially, I considered storing each user's utility functions 
-in a dictionary, but this approach quickly ran into problems with memory consumption and complexity. Every user's functions would exist in RAM simultaneously, making it 
-inefficient and unscalable. 
-
-To resolve this, I designed a filesystem-based solution structured like this:
-
-```
-user_files/
-├── <hashed_user_token_1>/
-  ├── utils.py
-├── <hashed_user_token_2>/
-  ├── utils.py
-```
-
-
-This setup ensures that each user has their own isolated `utils.py` file, allowing them to maintain custom helper functions without interfering with others. When executing code, the system automatically loads the corresponding `utils.py`, making user-defined utilities instantly available without the need for manual imports. This method also streamlines error detection and debugging, significantly enhancing the user experience.
 
 ## Plans for the Future
 
@@ -163,7 +132,3 @@ Created by CypherGuy. Feel free to contribute or reach out!
 
 <img width="1000" alt="An example theme" src="https://github.com/user-attachments/assets/e4d9859e-3b11-4e9a-97bc-a26454cdeafb" />
 *An example theme*
-
-
-
-
