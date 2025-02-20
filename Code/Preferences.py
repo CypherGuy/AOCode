@@ -1,11 +1,9 @@
-# Thanks Ellis for the idea!
-
 import os
 import json
 import hashlib
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QComboBox, QPushButton, QMessageBox, QSplitter
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QComboBox, QPushButton, QMessageBox, QSplitter, QColorDialog
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QColor
 import config
 
 
@@ -56,7 +54,9 @@ class Preferences(QWidget):
 
         layout.addWidget(QLabel("Theme"))
         self.editor_theme = QComboBox()
-        self.editor_theme.addItems(["Default", "Light", "Dark", "Solarized"])
+        self.editor_theme.addItems(
+            ["Default", "Light", "Dark", "Solarized", "Monokai", "Custom", "Change Custom"])
+
         self.editor_theme.currentTextChanged.connect(
             self.apply_editor_preferences)
         layout.addWidget(self.editor_theme)
@@ -78,7 +78,8 @@ class Preferences(QWidget):
 
         layout.addWidget(QLabel("Theme"))
         self.console_theme = QComboBox()
-        self.console_theme.addItems(["Default", "Light", "Dark", "Solarized"])
+        self.console_theme.addItems(
+            ["Default", "Light", "Dark", "Solarized", "Monokai", "Custom", "Change Custom"])
         self.console_theme.currentTextChanged.connect(
             self.apply_console_preferences)
         layout.addWidget(self.console_theme)
@@ -101,10 +102,19 @@ class Preferences(QWidget):
 
             self.editor_font.setCurrentText(
                 preferences["code_editor_preferences"]["Font"])
-            self.editor_theme.setCurrentText(
-                preferences["code_editor_preferences"]["Theme"])
-            self.console_theme.setCurrentText(
-                preferences["console_preferences"]["Theme"])
+
+            editor_theme = preferences["code_editor_preferences"]["Theme"]
+            # If the theme starts with #, it's a custom color
+            if editor_theme.startswith('#'):
+                self.editor_theme.setCurrentText("Custom")
+            else:
+                self.editor_theme.setCurrentText(editor_theme)
+
+            console_theme = preferences["console_preferences"]["Theme"]
+            if console_theme.startswith('#'):
+                self.console_theme.setCurrentText("Custom")
+            else:
+                self.console_theme.setCurrentText(console_theme)
 
         except FileNotFoundError as e:
             QMessageBox.warning(
@@ -125,9 +135,13 @@ class Preferences(QWidget):
 
     def save_file(self):
         try:
+            with open(self.preferences_path, "r") as f:
+                preferences = json.load(f)
+
             eTheme = self.editor_theme.currentText()
             eFont = self.editor_font.currentText()
             cTheme = self.console_theme.currentText()
+
             preferences = {
                 "code_editor_preferences": {
                     "Theme": eTheme,
@@ -139,10 +153,7 @@ class Preferences(QWidget):
             }
             with open(self.preferences_path, "w") as f:
                 json.dump(preferences, f, indent=4)
-            self.apply_editor_preferences()
-            self.apply_console_preferences()
 
-            # Inspired by a friend
             QMessageBox.information(
                 self, "Success", "Preferences saved successfully!")
             self.close()
@@ -164,23 +175,88 @@ class Preferences(QWidget):
         }, indent=4)
 
     def apply_editor_preferences(self):
-        """Apply preferences to the editor."""
-
+        """Apply preferences to the editor (GUI)."""
         theme = self.editor_theme.currentText()
-        fontType = self.editor_font.currentText()
+        with open(self.preferences_path, "r") as f:
+            preferences = json.load(f)
 
-        self.editor.setFont(fontType)
+        if theme != "Custom" and theme != "Change Custom":
+            self.editor.setStyleSheet(config.THEMES[theme])
+        else:
+            try:
+                if theme == "Change Custom":
+                    color = QColorDialog.getColor()
+                    if not color.isValid():
+                        return
 
-        self.editor.setStyleSheet(config.THEMES[theme])
+                    preferences["code_editor_preferences"]["Theme"] = color.name()
+                    with open(self.preferences_path, "w") as f:
+                        json.dump(preferences, f, indent=4)
+
+                    self.editor.setStyleSheet(
+                        f"background-color: {color.name()}; color: #000000;")
+                else:  # theme == "Custom"
+
+                    current_theme = preferences["code_editor_preferences"]["Theme"]
+                    # If this is a fresh "Custom" selection or not a hex color
+                    if not current_theme.startswith('#'):
+                        color = QColorDialog.getColor()
+                        if not color.isValid():
+                            return
+
+                        # Save the hex color directly
+                        preferences["code_editor_preferences"]["Theme"] = color.name()
+                        with open(self.preferences_path, "w") as f:
+                            json.dump(preferences, f, indent=4)
+                    else:
+                        # Use the existing hex color
+                        color = QColor(current_theme)
+
+                    self.editor.setStyleSheet(
+                        f"background-color: {color.name()}; color: #000000;")
+
+            except Exception as e:
+                print(f"Error applying editor preferences: {e}")
+                self.editor.setStyleSheet(config.THEMES["Default"])
+
+        font = QFont(preferences["code_editor_preferences"]["Font"], 15)
+        font.setFixedPitch(True)
+        self.editor.setFont(font)
 
     def apply_console_preferences(self):
         """Apply preferences to the console (GUI)."""
-
         theme = self.console_theme.currentText()
 
-        # Just to be sure
-        font = QFont("Arial", 12)
-        font.setFixedPitch(True)
-        self.console.setFont(font)
+        with open(self.preferences_path, "r") as f:
+            preferences = json.load(f)
 
-        self.console.setStyleSheet(config.THEMES[theme])
+        font = QFont("Menlo", 15)
+        font.setFixedPitch(True)
+        self.editor.setFont(font)
+
+        if theme != "Custom" and theme != "Change Custom":
+            self.console.setStyleSheet(config.THEMES[theme])
+        else:
+            # If theme is Custom, use the stored hex color
+            if theme == "Custom":
+                try:
+                    theme = preferences["console_preferences"]["Theme"]
+
+                    if theme.startswith('#'):
+                        color = QColor(theme)
+                        self.console.setStyleSheet(
+                            f"background-color: {color.name()}; color: #000000;")
+                except Exception as e:
+                    self.console.setStyleSheet(config.THEMES["Default"])
+
+            else:  # theme == "Change Custom"
+                color = QColorDialog.getColor()
+                if not color.isValid():
+                    return
+
+                preferences["console_preferences"]["Theme"] = color.name()
+                with open(self.preferences_path, "w") as f:
+                    json.dump(preferences, f, indent=4)
+
+                self.console.setStyleSheet(
+                    f"background-color: {color.name()}; color: #000000;")

@@ -1,31 +1,40 @@
 import requests
+from bs4 import BeautifulSoup
 
 
 def fetch_problem(year, day, session_cookie):
     url = f"https://adventofcode.com/{year}/day/{day}"
-    cookies = {'session': session_cookie}
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36'
-    }
-    response = requests.get(url, cookies=cookies, headers=headers)
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+               "AppleWebKit/537.36 (KHTML, like Gecko) "
+               "Chrome/96.0.4664.110 Safari/537.36"
+               }
+    s = requests.Session()
+    s.headers.update(headers)
+    s.cookies.set("session", session_cookie)
+    response = s.get(url)
 
-    if response.status_code == 200:
-        from bs4 import BeautifulSoup
-        soup = BeautifulSoup(response.text, 'html.parser')
-        parts = soup.find_all('article')
+    print(response.text)
 
-        while len(parts) < 2:
-            parts.append("Could not fetch Part 2. Maybe it's locked?")
-
-        return [part.text if hasattr(part, 'text') else part for part in parts[:2]]
-    else:
+    if response.status_code != 200:
         return ["Could not fetch Part 1. Maybe it's locked?", "Could not fetch Part 2. Maybe it's locked?"]
 
+    soup = BeautifulSoup(response.text, "html.parser")
+    articles = soup.find_all("article")
 
-def fetch_input(year, day, session_cookie=None):
-    if session_cookie is None:
-        session_cookie = input("Enter your session cookie: ")
+    parts = []
+    for article in articles:
+        if article.text:
+            parts.append(article.text)
+        else:
+            parts.append("No Part found")
 
+    parts = parts[:2]
+    if len(parts) < 2:
+        parts.append("Part 2 not unlocked yet.")
+    return parts
+
+
+def fetch_input(year, day, session_cookie):
     url = f"https://adventofcode.com/{year}/day/{day}/input"
     session = requests.Session()
 
@@ -39,7 +48,7 @@ def fetch_input(year, day, session_cookie=None):
     if response.status_code == 200:
         return response.text
     else:
-        return f"Failed to fetch input for {year} day {day}. Maybe your session key is wrong?"
+        return f"Failed to fetch input for {year} day {day}. Are you sure it's unlocked?"
 
 
 def get_last_paragraph(text):
