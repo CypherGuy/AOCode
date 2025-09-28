@@ -1,4 +1,5 @@
 import sys
+import os
 from typing import List, Optional
 from PySide6 import QtWidgets, QtCore, QtGui
 from AoCFetcher import fetch_input, fetch_problem, get_last_paragraph
@@ -50,7 +51,16 @@ class AoCEditor(QtWidgets.QWidget):
         self.settings_button: QtWidgets.QPushButton = QtWidgets.QPushButton(
             self)
         self.settings_button.clicked.connect(self.toggle_preferences)
-        self.settings_button.setIcon(QIcon("Code/images/cog.png"))
+
+        # Get the absolute path to the icon file
+        icon_path = os.path.join(os.path.dirname(
+            os.path.abspath(__file__)), "images", "cog.png")
+        if os.path.exists(icon_path):
+            self.settings_button.setIcon(QIcon(icon_path))
+        else:
+            # Fallback: use text if icon doesn't load
+            self.settings_button.setText("⚙")
+
         self.settings_button.setIconSize(QSize(24, 24))
         self.settings_button.setFixedSize(32, 32)
         dropdown_layout.addWidget(self.settings_button)
@@ -202,7 +212,7 @@ class AoCEditor(QtWidgets.QWidget):
         submit_answer(year, day, part, self.session_cookie,
                       self.terminal.toPlainText(), self.terminal, self)
 
-    def get_info(self) -> tuple[int, int, str] | str | None:
+    def get_info(self) -> tuple[str, str, str] | str | None:
         current_tab = self.problem_tabs.currentIndex()
         if current_tab == 0:
             part = "1"
@@ -214,15 +224,21 @@ class AoCEditor(QtWidgets.QWidget):
             )
             return
 
-        year = self.year_dropdown.currentText()
-        day = self.day_dropdown.currentText()
+        year: str = self.year_dropdown.currentText()
+        day: str = self.day_dropdown.currentText()
         return year, day, part
 
-    def run_code(self, code: str) -> str:
+    def run_code(self) -> None:
+        code = self.code_editor.toPlainText()
         if not code.strip():
-            return "Error: No code to execute!"
+            self.terminal.setText("Error: No code to execute!")
+            return
 
-        return execute_code(code)
+        output = execute_code(code)
+        if output:
+            self.terminal.setText(output)
+        else:
+            self.terminal.setText("Code executed successfully (no output)")
 
     def eventFilter(self, obj: QObject, event: QtCore.QEvent) -> bool:
         if obj == self.code_editor and event.type() == QtCore.QEvent.KeyPress:
@@ -309,6 +325,27 @@ class AoCEditor(QtWidgets.QWidget):
                 break
         return indentation
 
+    def add_newlines_after_second_dash(self, text: str) -> str:
+        """Add two newlines after the second occurrence of '---' in the text."""
+        dash_count = 0
+        result = ""
+        i = 0
+
+        while i < len(text):
+            if text[i:i+3] == "---":
+                result += "---"
+                dash_count += 1
+                i += 3
+
+                if dash_count == 2:
+                    # Add two newlines after the second "---"
+                    result += "\n\n"
+            else:
+                result += text[i]
+                i += 1
+
+        return result
+
     def update_problem_description(self) -> None:
         year: str = self.year_dropdown.currentText()
         day: str = self.day_dropdown.currentText()
@@ -316,21 +353,40 @@ class AoCEditor(QtWidgets.QWidget):
         config.CURRENT_YEAR = year
         config.CURRENT_DAY = day
 
-        part1_text: str
-        part2_text: str
-        part1_text, part2_text = fetch_problem(
-            int(year), int(day), self.session_cookie)
+        parts, error_msg = fetch_problem(
+            int(year), int(day), self.session_cookie
+        )
 
-        self.part1_panel.setPlainText(part1_text)
-        self.part2_panel.setPlainText(part2_text)
+        part1_text: str = parts[0] if len(parts) > 0 else ""
+        part2_text: str = parts[1] if len(parts) > 1 else ""
 
-        user_input: str = fetch_input(int(year), int(day), self.session_cookie)
-        self.input_panel.setPlainText(user_input)
+        if error_msg:
+            print(f"Error: {error_msg}")
 
-        last_sentence: str = get_last_paragraph(part1_text)
-        self.hint_box.setPlainText(last_sentence)
+        if part1_text:
+            # Add two newlines after the second occurrence of "---"
+            formatted_part1 = self.add_newlines_after_second_dash(part1_text)
+            self.part1_panel.setPlainText(formatted_part1)
 
-        self.problem_tabs.setCurrentIndex(0)
+            if part2_text:
+                formatted_part2 = self.add_newlines_after_second_dash(
+                    part2_text)
+                self.part2_panel.setPlainText(formatted_part2)
+            else:
+                self.part2_panel.setPlainText(
+                    "Part 2 not available yet. Complete Part 1 first!")
+
+            user_input: str = fetch_input(
+                int(year), int(day), self.session_cookie)
+            self.input_panel.setPlainText(user_input)
+
+            last_sentence: str = get_last_paragraph(part1_text)
+            self.hint_box.setPlainText(last_sentence)
+
+            self.problem_tabs.setCurrentIndex(0)
+        else:
+            self.part1_panel.setPlainText("No problem available for today.")
+            self.part2_panel.setPlainText("")
 
     def update_hint(self, index: int) -> None:
         if index == 0:

@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import subprocess
 import time
 import tempfile
+import sys
 
 import requests
 
@@ -19,7 +20,7 @@ def execute_code(code: str) -> Union[str, None]:
         with tempfile.NamedTemporaryFile('w', suffix='.py') as f:
             f.write(code)
             f.flush()
-            result = subprocess.run(['python', f.name], stdin=subprocess.PIPE, capture_output=True,
+            result = subprocess.run([sys.executable, f.name], stdin=subprocess.PIPE, capture_output=True,
                                     text=True, timeout=20, encoding='utf-8')
             # I included stdin=subprocess.PIPE as the user may want to request inputs, however
             # unlikely. Additionally AoC solutions can all be done in under 15 seconds so I give
@@ -51,7 +52,6 @@ def submit_answer(year: int, day: int, part: str, token: str, answer: str, termi
 
     response = requests.post(url, headers=headers, data=data, cookies=cookies)
 
-    # Debugging: Print response status and content
     if response.status_code != 200:
         terminal.append(f"Error: Received status code {response.status_code}")
         return

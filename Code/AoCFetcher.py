@@ -23,11 +23,9 @@ def fetch_problem(year: int, day: int, session_cookie: str) -> Tuple[List[str], 
     articles = soup.find_all("article")
 
     parts = []
-    for article in articles:
-        if article.text:
-            parts.append(article.text)
-        else:
-            parts.append("")
+    for _, article in enumerate(articles):
+        article_text = article.text if article.text else ""
+        parts.append(article_text)
 
     parts = parts[:2]
     if len(parts) < 2:
