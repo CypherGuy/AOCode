@@ -5,6 +5,7 @@ import subprocess
 import time
 import tempfile
 import sys
+import os
 
 import requests
 
@@ -12,15 +13,21 @@ import requests
 from typing import Union
 
 
-def execute_code(code: str) -> Union[str, None]:
+def execute_code(code: str, utils_content: str = "") -> Union[str, None]:
     start_time = time.time()
     try:
         if len(code) == 0:
             return "Nothing in the terminal to execute :()"
-        with tempfile.NamedTemporaryFile('w', suffix='.py') as f:
-            f.write(code)
-            f.flush()
-            result = subprocess.run([sys.executable, f.name], stdin=subprocess.PIPE, capture_output=True,
+
+        # Prepend utils content to the user's code
+        full_code = f"{utils_content}\n\n{code}"
+
+        with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as f:
+            f.write(full_code)
+            temp_path: str = f.name
+
+        try:
+            result = subprocess.run([sys.executable, temp_path], stdin=subprocess.PIPE, capture_output=True,
                                     text=True, timeout=20, encoding='utf-8')
             # I included stdin=subprocess.PIPE as the user may want to request inputs, however
             # unlikely. Additionally AoC solutions can all be done in under 15 seconds so I give
@@ -31,6 +38,9 @@ def execute_code(code: str) -> Union[str, None]:
                 end_time = time.time()
                 time_taken = end_time - start_time
                 return f"Process took approximately {time_taken:.4f} seconds\n{result.stderr}"
+        finally:
+            # Clean up the temp file
+            os.unlink(temp_path)
     except subprocess.TimeoutExpired:
         return "There's very likely an infinite loop/recursion or a way to do it much quicker. Every solution can be done in under 15 seconds, this has returned after 60."
 

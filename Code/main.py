@@ -234,7 +234,10 @@ class AoCEditor(QtWidgets.QWidget):
             self.terminal.setText("Error: No code to execute!")
             return
 
-        output = execute_code(code)
+        # Make the utils content available to the user's code
+        utils_content = self.utilsEditor.get_content() or ""
+
+        output = execute_code(code, utils_content)
         if output:
             self.terminal.setText(output)
         else:
