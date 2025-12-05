@@ -42,7 +42,7 @@ def execute_code(code: str, utils_content: str = "") -> Union[str, None]:
             # Clean up the temp file
             os.unlink(temp_path)
     except subprocess.TimeoutExpired:
-        return "There's very likely an infinite loop/recursion or a way to do it much quicker. Every solution can be done in under 15 seconds, this has returned after 60."
+        return "There's very likely an infinite loop/recursion or a way to do it much quicker. Every solution can be done in under 15 seconds, this has returned after 20."
 
 
 def submit_answer(year: int, day: int, part: str, token: str, answer: str, terminal: QtWidgets.QTextEdit, instance: object) -> None:

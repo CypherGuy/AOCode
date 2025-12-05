@@ -95,12 +95,14 @@ AOCode/
 There is also a folder called user_files. What this is will be explained later, but essentially it's a file structure to store user preferences and their utility files,
 identified by their token which is hashed via SHA256 and stored as the folder name. The one you see is a mimic to show what it would look like.
 
+You can call any fucntion defined in there as if they were defined in your interface already, no imports needed.
+
 ## Technologies Used
 
 - **GUI**: PySide6 (Qt for Python)
 - **Web Scraping**: requests, BeautifulSoup4
 - **Syntax Highlighting**: Just pure Python!
-- **JSON Storage**: For storing user preferences. I plan to shift this over to a NoSQL Database in the future
+- **JSON Storage**: For storing user preferences. I plan to shift this over to a Database in the future
 
 ## Plans for the Future
 
@@ -108,7 +110,7 @@ identified by their token which is hashed via SHA256 and stored as the folder na
 - Support for additional programming languages beyond Python
 - Introducing debugging tools (breakpoints, variable inspection, etc.)
 - Expanding functionality for competitive programming beyond Advent of Code
-- Integration with LLM's (with restrictions on the first 60 minute after puzzle release or after part 2 is completed to prevent cheating and getting a flase leaderboard position)
+- Integration with LLM's
 - Shift from JSON files to Databases
 
 ## Contributions & Community
