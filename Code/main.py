@@ -10,7 +10,7 @@ from PySide6.QtCore import QSize, QObject
 from core.runner import execute_code, submit_answer
 from core.utils import Utils
 import config.config as config
-import config.preferences as preferences
+from config.preferences import Preferences
 
 
 class AoCEditor(QtWidgets.QWidget):
@@ -155,8 +155,6 @@ class AoCEditor(QtWidgets.QWidget):
 
         self.code_editor: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
         self.code_editor.setPlaceholderText("Write your code here...")
-        self.preferences_panel: Preferences.Preferences = Preferences.Preferences(
-            editor=self.code_editor, console=self, token=config.TOKEN)
 
         # Set tab width to exactly 4 spaces
         metrics: QtGui.QFontMetrics = QtGui.QFontMetrics(QFont("Arial", 12))
@@ -182,6 +180,8 @@ class AoCEditor(QtWidgets.QWidget):
         self.setLayout(main_layout)
 
         self.code_editor.installEventFilter(self)
+        self.preferences_panel = Preferences(
+            editor=self.code_editor, console=self, token=self.session_cookie)
         self.preferences_panel.editor = self.code_editor
 
         self.year_dropdown.currentIndexChanged.connect(
@@ -230,7 +230,7 @@ class AoCEditor(QtWidgets.QWidget):
 
     def run_code(self) -> None:
         code = self.code_editor.toPlainText()
-        if not strip():
+        if not code.strip():
             self.terminal.setText("Error: No code to execute!")
             return
 

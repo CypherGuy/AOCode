@@ -2,7 +2,7 @@ import hashlib
 import os
 from PySide6.QtWidgets import QMessageBox
 from ui.highlighter import PythonHighlighter
-import config
+import config.config as config
 
 
 class Utils:
