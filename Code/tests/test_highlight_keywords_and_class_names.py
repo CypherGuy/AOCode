@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock
-from Code.Highlighter import PythonHighlighter
+from Code.ui.highlighter import PythonHighlighter
 
 
 class TestHighlightKeywordsAndClassNames(unittest.TestCase):
@@ -59,6 +59,34 @@ class TestHighlightKeywordsAndClassNames(unittest.TestCase):
             text, start_pos, end_pos)
         self.highlighter.setFormat.assert_called_once_with(
             1, 3, self.highlighter.keyword_format)
+
+    def test_keywords_inside_normal_strings_not_highlighted(self):
+        """Ensure keywords inside quoted strings are NOT highlighted."""
+        text = 'print("class def if while return")'
+        doc = QTextDocument(text)
+        highlighter = PythonHighlighter(doc)
+
+        # Spy on setFormat
+        highlighter.setFormat = MagicMock()
+
+        # Run the highlighter on the whole document
+        highlighter.rehighlight()
+
+        # Extract all formatted segments (start, count, format)
+        calls = highlighter.setFormat.call_args_list
+
+        # Check each call to ensure the highlighted text is NOT inside the string
+        inside_string_range = (text.index('"'), text.rindex('"'))
+
+        for call in calls:
+            start, count, _ = call[0]
+            # If any formatting covers chars inside quotes → FAIL
+            if start >= inside_string_range[0] and start < inside_string_range[1]:
+                self.fail(
+                    "Keyword inside quoted string was incorrectly highlighted")
+
+        # If no illegal call fails, the test passes
+        self.assertTrue(True)
 
 
 if __name__ == "__main__":
