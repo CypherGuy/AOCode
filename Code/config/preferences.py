@@ -4,7 +4,7 @@ import hashlib
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QSplitter, QComboBox, QPushButton, QTextEdit, QMessageBox, QColorDialog
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QColor
-import config
+import config.config as config
 
 
 class Preferences(QWidget):

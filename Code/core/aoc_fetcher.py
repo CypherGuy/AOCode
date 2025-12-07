@@ -17,7 +17,7 @@ def fetch_problem(year: int, day: int, session_cookie: str) -> Tuple[List[str], 
     response = s.get(url)
 
     if response.status_code != 200:
-        return ["", ""], "Could not fetch Part 1. Maybe it's locked?"
+        return ["", ""], "Could not fetch Part 1. Is it in the future?"
 
     soup = BeautifulSoup(response.text, "html.parser")
     articles = soup.find_all("article")

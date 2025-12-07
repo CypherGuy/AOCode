@@ -1,6 +1,6 @@
 import unittest
 
-from Code.AoCFetcher import get_last_paragraph
+from Code.core.aoc_fetcher import get_last_paragraph
 
 
 class TestGetLastParagraph(unittest.TestCase):

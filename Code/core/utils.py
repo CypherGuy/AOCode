@@ -1,4 +1,68 @@
-# Inspired from my personal utils file for AoC
+import hashlib
+import os
+from PySide6.QtWidgets import QMessageBox
+from ui.highlighter import PythonHighlighter
+import config
+
+
+class Utils:
+    def __init__(self, panel):
+        self.token = config.TOKEN
+        self.user_id = self.generate_user_id(self.token)
+        config.HASHED_TOKEN = self.user_id
+        self.utils_dir = os.path.join("user_files", self.user_id)
+        self.utils_path = os.path.join(self.utils_dir, "utils.py")
+        self.default_template = self.get_template()
+        self.panel = panel
+
+        # Setup
+        self.add_user()
+        self.load_file()
+
+        # Connect text changes to autosave
+        self.panel.textChanged.connect(self.save_file)
+
+        self.highlighter = PythonHighlighter(self.panel.document())
+
+    def generate_user_id(self, token):
+        return hashlib.sha256(token.encode()).hexdigest()
+
+    def add_user(self):
+        os.makedirs(self.utils_dir, exist_ok=True)
+        if not os.path.exists(self.utils_path):
+            with open(self.utils_path, "w") as f:
+                f.write(self.default_template)
+
+    def load_file(self):
+        try:
+            with open(self.utils_path, "r") as f:
+                content = f.read()
+                self.panel.setPlainText(content)
+        except Exception as e:
+            QMessageBox.critical(
+                None, "Error", f"Failed to load utils.py: {e}"
+            )
+
+    def get_content(self):
+        try:
+            with open(self.utils_path, "r") as f:
+                return f.read()
+        except Exception as e:
+            QMessageBox.critical(
+                None, "Error", f"Failed to load utils.py: {e}"
+            )
+
+    def save_file(self):
+        try:
+            with open(self.utils_path, "w") as f:
+                f.write(self.panel.toPlainText())
+        except Exception as e:
+            QMessageBox.critical(
+                None, "Error", f"Failed to save utils.py: {e}"
+            )
+
+    def get_template(self):
+        return """# Inspired from my personal utils file for AoC
 
 from collections import deque
 from functools import reduce
@@ -228,4 +292,4 @@ def lcmWithRemainder(a: List[int], n: List[int]) -> int:
         Ni = N // ni
         Mi = mod_inverse(Ni, ni)
         result += ai * Ni * Mi
-    return result % N
+    return result % N"""

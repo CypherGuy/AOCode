@@ -8,8 +8,6 @@ import sys
 import os
 
 import requests
-
-
 from typing import Union
 
 

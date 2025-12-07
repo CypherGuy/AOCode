@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from Code.exec import submit_answer
+from Code.runner import submit_answer
 
 
 class TestSubmitAnswer(unittest.TestCase):

@@ -2,15 +2,15 @@ import sys
 import os
 from typing import List, Optional
 from PySide6 import QtWidgets, QtCore, QtGui
-from AoCFetcher import fetch_input, fetch_problem, get_last_paragraph
-from Highlighter import PythonHighlighter
+from core.aoc_fetcher import fetch_input, fetch_problem, get_last_paragraph
+from ui.highlighter import PythonHighlighter
 from PySide6.QtGui import QFont, QTextCursor, QIcon
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QSize, QObject
-from exec import execute_code, submit_answer
-from utils import Utils
-import config
-import Preferences
+from core.runner import execute_code, submit_answer
+from core.utils import Utils
+import config.config as config
+import config.preferences as preferences
 
 
 class AoCEditor(QtWidgets.QWidget):
@@ -230,7 +230,7 @@ class AoCEditor(QtWidgets.QWidget):
 
     def run_code(self) -> None:
         code = self.code_editor.toPlainText()
-        if not code.strip():
+        if not strip():
             self.terminal.setText("Error: No code to execute!")
             return
 
