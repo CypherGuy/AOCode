@@ -244,7 +244,7 @@ class AoCEditor(QtWidgets.QWidget):
             self.terminal.setText("Code executed successfully (no output)")
 
     def eventFilter(self, obj: QObject, event: QtCore.QEvent) -> bool:
-        if obj == self.code_editor and event.type() == QtCore.QEvent.KeyPress:
+        if obj == self.code_editor and event.type() == QtCore.QEvent.Type.KeyPress:
             match event.key():
                 case QtCore.Qt.Key_V if event.modifiers() == QtCore.Qt.ControlModifier:
                     text = QApplication.clipboard().text()

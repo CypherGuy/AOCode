@@ -62,7 +62,7 @@ class Utils:
             )
 
     def get_template(self):
-        return """# Inspired from my personal utils file for AoC
+        return """# A couple of functions to get you started.
 
 from collections import deque
 from functools import reduce

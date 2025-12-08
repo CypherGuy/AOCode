@@ -10,6 +10,9 @@ import os
 import requests
 from typing import Union
 
+from core.aoc_fetcher import fetch_input
+import config.config as config
+
 
 def execute_code(code: str, utils_content: str = "") -> Union[str, None]:
     start_time = time.time()
@@ -17,8 +20,15 @@ def execute_code(code: str, utils_content: str = "") -> Union[str, None]:
         if len(code) == 0:
             return "Nothing in the terminal to execute :()"
 
-        # Prepend utils content to the user's code
-        full_code = f"{utils_content}\n\n{code}"
+        year = config.CURRENT_YEAR
+        day = config.CURRENT_DAY
+        token = config.TOKEN
+
+        user_input: str = fetch_input(
+            int(year), int(day), token)
+
+        # Use repr() to properly escape the input string, meaning we get the full input, not just the first line
+        full_code = f"{utils_content}\ndata = {repr(user_input)}\n{code}"
 
         with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as f:
             f.write(full_code)
