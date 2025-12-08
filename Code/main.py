@@ -200,10 +200,12 @@ class AoCEditor(QtWidgets.QWidget):
         self.code_editor.installEventFilter(self)
 
         self.infobox_panel = Infobox()
+        self.infobox_panel.installEventFilter(self)
 
         self.preferences_panel = Preferences(
             editor=self.code_editor, console=self, token=self.session_cookie)
         self.preferences_panel.editor = self.code_editor
+        self.preferences_panel.installEventFilter(self)
 
         self.year_dropdown.currentIndexChanged.connect(
             self.update_problem_description
@@ -276,77 +278,127 @@ class AoCEditor(QtWidgets.QWidget):
         else:
             self.terminal.setText("Code executed successfully (no output)")
 
+    def _handle_keyboard_shortcuts(self, event: QtCore.QEvent) -> bool:
+        # _ at the start of a function name indicates it should only be used inside the class
+        key = event.key()
+        modifiers = event.modifiers()
+
+        if modifiers != QtCore.Qt.ControlModifier:
+            return False
+
+        # Run
+        if key == QtCore.Qt.Key_R:
+            self.run_code()
+            return True
+
+        # Submit
+        if key == QtCore.Qt.Key_Return:
+            self.submit_button.click()
+            return True
+
+        # Preferences
+        if key == QtCore.Qt.Key_P:
+            self.toggle_preferences()
+            return True
+
+        # Infobox
+        if key == QtCore.Qt.Key_I:
+            self.toggle_infobox()
+            return True
+
+        # Use Cmd+tab to switch between tabs
+        tab_keys = {
+            QtCore.Qt.Key_1: 0,
+            QtCore.Qt.Key_2: 1,
+            QtCore.Qt.Key_3: 2,
+            QtCore.Qt.Key_4: 3,
+        }
+
+        if key in tab_keys:
+            self.problem_tabs.setCurrentIndex(tab_keys[key])
+            return True
+
+        return False
+
     def eventFilter(self, obj: QObject, event: QtCore.QEvent) -> bool:
-        if obj == self.code_editor and event.type() == QtCore.QEvent.Type.KeyPress:
-            match event.key():
-                case QtCore.Qt.Key_V if event.modifiers() == QtCore.Qt.ControlModifier:
-                    text = QApplication.clipboard().text()
-                    highlighter = PythonHighlighter(obj.document())
-                    highlighter.highlightBlock(text)
-                    font = QFont("Menlo", 14)
-                    obj.setFont(font)
-                    obj.insertPlainText(text)
-                    return True
+        if event.type() != QtCore.QEvent.KeyPress:
+            return super().eventFilter(obj, event)
 
-                case QtCore.Qt.Key_Tab:
-                    cursor = self.code_editor.textCursor()
-                    if cursor.hasSelection():
-                        # Handle block indentation
-                        start = cursor.selectionStart()
-                        end = cursor.selectionEnd()
-                        cursor.setPosition(start)
-                        cursor.movePosition(QTextCursor.StartOfBlock)
-                        while cursor.position() <= end:
-                            cursor.insertText('    ')
-                            end += 4
-                            if not cursor.movePosition(QTextCursor.NextBlock):
-                                break
-                    else:
+        if self._handle_keyboard_shortcuts(event):
+            return True
+
+        if obj != self.code_editor:
+            return super().eventFilter(obj, event)
+
+        match event.key():
+            case QtCore.Qt.Key_V if event.modifiers() == QtCore.Qt.ControlModifier:
+                text = QApplication.clipboard().text()
+                highlighter = PythonHighlighter(obj.document())
+                highlighter.highlightBlock(text)
+                font = QFont("Menlo", 14)
+                obj.setFont(font)
+                obj.insertPlainText(text)
+                return True
+
+            case QtCore.Qt.Key_Tab:
+                cursor = self.code_editor.textCursor()
+                if cursor.hasSelection():
+                    # Handle block indentation
+                    start = cursor.selectionStart()
+                    end = cursor.selectionEnd()
+                    cursor.setPosition(start)
+                    cursor.movePosition(QTextCursor.StartOfBlock)
+                    while cursor.position() <= end:
                         cursor.insertText('    ')
-                    return True
+                        end += 4
+                        if not cursor.movePosition(QTextCursor.NextBlock):
+                            break
+                else:
+                    cursor.insertText('    ')
+                return True
 
-                case QtCore.Qt.Key_Backtab:
-                    cursor = self.code_editor.textCursor()
-                    if cursor.hasSelection():
-                        # Handle block dedentation
-                        start = cursor.selectionStart()
-                        end = cursor.selectionEnd()
-                        cursor.setPosition(start)
-                        cursor.movePosition(QTextCursor.StartOfBlock)
-                        while cursor.position() <= end:
-                            line_text = cursor.block().text()
-                            if line_text.startswith('    '):
-                                cursor.movePosition(
-                                    QTextCursor.NextCharacter, QTextCursor.KeepAnchor, 4)
-                                cursor.removeSelectedText()
-                                end -= 4
-                            if not cursor.movePosition(QTextCursor.NextBlock):
-                                break
-                    else:
-                        cursor = self.code_editor.textCursor()
-                        block_text = cursor.block().text()
-                        if block_text.startswith('    '):
-                            cursor.movePosition(QTextCursor.StartOfBlock)
+            case QtCore.Qt.Key_Backtab:
+                cursor = self.code_editor.textCursor()
+                if cursor.hasSelection():
+                    # Handle block dedentation
+                    start = cursor.selectionStart()
+                    end = cursor.selectionEnd()
+                    cursor.setPosition(start)
+                    cursor.movePosition(QTextCursor.StartOfBlock)
+                    while cursor.position() <= end:
+                        line_text = cursor.block().text()
+                        if line_text.startswith('    '):
                             cursor.movePosition(
                                 QTextCursor.NextCharacter, QTextCursor.KeepAnchor, 4)
                             cursor.removeSelectedText()
-                    return True
-
-                case QtCore.Qt.Key_Return | QtCore.Qt.Key_Enter:
+                            end -= 4
+                        if not cursor.movePosition(QTextCursor.NextBlock):
+                            break
+                else:
                     cursor = self.code_editor.textCursor()
-                    current_block = cursor.block().text()
-                    stripped_line = current_block.rstrip()
+                    block_text = cursor.block().text()
+                    if block_text.startswith('    '):
+                        cursor.movePosition(QTextCursor.StartOfBlock)
+                        cursor.movePosition(
+                            QTextCursor.NextCharacter, QTextCursor.KeepAnchor, 4)
+                        cursor.removeSelectedText()
+                return True
 
-                    indentation = self.get_current_indentation(stripped_line)
-                    n = indentation.count('    ')
+            case QtCore.Qt.Key_Return | QtCore.Qt.Key_Enter:
+                cursor = self.code_editor.textCursor()
+                current_block = cursor.block().text()
+                stripped_line = current_block.rstrip()
 
-                    if stripped_line.endswith(':'):
-                        new_indentation = ' ' * 4 * (n + 1)
-                    else:
-                        new_indentation = indentation
+                indentation = self.get_current_indentation(stripped_line)
+                n = indentation.count('    ')
 
-                    cursor.insertText('\n' + new_indentation)
-                    return True
+                if stripped_line.endswith(':'):
+                    new_indentation = ' ' * 4 * (n + 1)
+                else:
+                    new_indentation = indentation
+
+                cursor.insertText('\n' + new_indentation)
+                return True
 
         return super().eventFilter(obj, event)
 
