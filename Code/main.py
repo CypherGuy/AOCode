@@ -11,6 +11,7 @@ from core.runner import execute_code, submit_answer
 from core.utils import Utils
 import config.config as config
 from config.preferences import Preferences
+from ui.infobox import Infobox
 
 
 class AoCEditor(QtWidgets.QWidget):
@@ -47,6 +48,23 @@ class AoCEditor(QtWidgets.QWidget):
 
         dropdown_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
         dropdown_layout.addStretch(1)
+
+        self.infobox_button: QtWidgets.QPushButton = QtWidgets.QPushButton(
+            self)
+        self.infobox_button.clicked.connect(self.toggle_infobox)
+
+        # Get the absolute path to the icon file
+        icon_path = os.path.join(os.path.dirname(
+            os.path.abspath(__file__)), "images", "info.png")
+        if os.path.exists(icon_path):
+            self.infobox_button.setIcon(QIcon(icon_path))
+        else:
+            # Fallback: use text if icon doesn't load
+            self.infobox_button.setText("!")
+
+        self.infobox_button.setIconSize(QSize(24, 24))
+        self.infobox_button.setFixedSize(32, 32)
+        dropdown_layout.addWidget(self.infobox_button)
 
         self.settings_button: QtWidgets.QPushButton = QtWidgets.QPushButton(
             self)
@@ -180,6 +198,9 @@ class AoCEditor(QtWidgets.QWidget):
         self.setLayout(main_layout)
 
         self.code_editor.installEventFilter(self)
+
+        self.infobox_panel = Infobox()
+
         self.preferences_panel = Preferences(
             editor=self.code_editor, console=self, token=self.session_cookie)
         self.preferences_panel.editor = self.code_editor
@@ -205,6 +226,18 @@ class AoCEditor(QtWidgets.QWidget):
 
     def close_preferences(self) -> None:
         self.preferences_panel.close()
+
+    def toggle_infobox(self):
+        if self.infobox_panel.isVisible():
+            self.close_infobox()
+        else:
+            self.open_infobox()
+
+    def open_infobox(self) -> None:
+        self.infobox_panel.show()
+
+    def close_infobox(self) -> None:
+        self.infobox_panel.close()
 
     def handle_submit_button(self) -> None:
         # Handles the submit button action
