@@ -13,6 +13,7 @@ from core.utils import Utils
 import config.config as config
 from config.preferences import Preferences
 from ui.infobox import Infobox
+from keyring import get_password, set_password
 
 
 class AoCEditor(QtWidgets.QWidget):
@@ -22,8 +23,12 @@ class AoCEditor(QtWidgets.QWidget):
         self.resize(1200, 1000)
         self.setWindowTitle("AoCode")
 
-        self.session_cookie: str = self.get_session_token()
-        config.TOKEN = self.session_cookie
+        config.TOKEN = get_password("AoCode", "session_token")
+        if config.TOKEN:
+            self.session_cookie: str = config.TOKEN
+        else:
+            self.session_cookie: str = self.get_session_token()
+            config.TOKEN = self.session_cookie
 
         if not self.session_cookie:
             QtWidgets.QMessageBox.critical(
@@ -529,6 +534,7 @@ class AoCEditor(QtWidgets.QWidget):
                 token: str = session_input.text().strip()
                 if len(token) == 128 and token.isalnum():
                     valid_token[0] = token
+                    set_password("AoCode", "session_token", token)
                     dialog.accept()
                 else:
                     QtWidgets.QMessageBox.warning(

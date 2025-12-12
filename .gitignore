@@ -5,6 +5,12 @@ __pycache__/
 *.pyo
 *.pyd
 
+# Virtual Environment
+venv/
+env/
+.venv/
+ENV/
+
 # Pytest
 .pytest_cache/
 htmlcov/
