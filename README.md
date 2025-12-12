@@ -13,14 +13,32 @@ I haven't used before.
 ## Features
 
 - **Built-By-Scratch Syntax Highlighter**: No-library Syntax Highlighter highlights Python keywords, functions, comments, etc.
+- **Smart Code Editor**: Line numbers, auto-indentation, block indent/dedent with Tab/Shift+Tab, and smooth tab navigation.
 - **Built-in Code Execution**: Runs Python code directly within the IDE.
+- **Automatic Input Loading**: Your puzzle input is automatically available as the `data` variable. No need to read files.
 - **Quick Submission**: Submit solutions to Advent of Code in one click.
+- **Color-Coded Feedback**: Terminal displays green for correct answers, red for incorrect ones.
 - **User Preferences Panel**: Customize themes and fonts for both the editor and console. Preferences persist upon restart.
-- **Session Management**: Securely stores and reuses session tokens for problem fetching.
+- **Custom Theme Creator**: Use the built-in color picker to create your own custom color themes.
+- **Session Management**: Securely stores and reuses session tokens via system keyring.
+- **Auto-Save Utils**: Your custom utility functions save automatically as you type.
 - **Resizable Panels**: Adjust terminal, question panels, and code editor as needed.
 - **Auto-Unlock Part 2**: Automatically loads Part 2 once Part 1 is completed.
 - **Tabbed Interface**: Quickly switch between each part, input, and helper functions.
 - **Persistent Hint Box**: The last part of the question remains visible at all times, reducing unnecessary scrolling.
+- **Keyboard Shortcuts**: Lightning-fast workflow with comprehensive keyboard shortcuts (see below).
+
+## Keyboard Shortcuts
+
+Make your workflow lightning-fast with these shortcuts:
+
+- **Cmd+R**: Run your code
+- **Cmd+Enter**: Submit your answer to Advent of Code
+- **Cmd+P**: Toggle preferences panel
+- **Cmd+I**: Open info/help dialog
+- **Cmd+1/2/3/4**: Switch between Part 1, Part 2, Input, and Utils tabs
+- **Tab**: Indent current line or selection (4 spaces)
+- **Shift+Tab**: Dedent current line or selection
 
 ## Installation
 
@@ -34,15 +52,25 @@ cd AOCode
 2. Install dependencies:
 
 ```
-pip install -r requirements.txt
+pip install -r Code/requirements.txt
 ```
 
-**Current Development Dependencies:**
+**Current Dependencies:**
 
 ```
 PySide6>=6.8.1
 requests>=2.32
-beautifulsoup4>=4.1
+beautifulsoup4>=4.10
+keyring>=25.7.0
+```
+
+**Development Dependencies (for testing):**
+
+```
+pytest>=9.0.2
+pytest-qt>=4.5.0
+pytest-mock>=3.15.1
+pytest-cov>=7.0.0
 ```
 
 _(Note: These versions are flexible to allow updates as the project evolves.)_
@@ -50,7 +78,7 @@ _(Note: These versions are flexible to allow updates as the project evolves.)_
 3. Run the application:
 
 ```
-python main.py
+python Code/main.py
 ```
 
 And you're done!
@@ -82,27 +110,50 @@ Upon running `main.py`, you will be prompted to enter your Advent of Code sessio
 
 ```
 AOCode/
-│-- AoCFetcher.py # Fetches problem descriptions and inputs
-│-- config.py # Stores session tokens and configuration variables
-│-- exec.py # Handles code execution and solution submission
-│-- Highlighter.py # Implements syntax highlighting
-│-- main.py # Entry point of the application
-│-- Preferences.py # Preferences panel for customizing the IDE
-│-- requirements.txt # Dependencies for the project
-│-- utils.py # Utility functions for problem solving
+├── Code/
+│   ├── main.py                    # Entry point of the application
+│   ├── requirements.txt           # Project dependencies
+│   │
+│   ├── config/
+│   │   ├── config.py              # Global configuration and theme definitions
+│   │   └── preferences.py         # Preferences panel for customizing the IDE
+│   │
+│   ├── core/
+│   │   ├── aoc_fetcher.py         # Fetches problem descriptions and inputs from AoC
+│   │   ├── runner.py              # Handles code execution and solution submission
+│   │   └── utils.py               # User utilities manager and template
+│   │
+│   ├── ui/
+│   │   ├── code_editor.py         # Code editor with line numbers
+│   │   ├── highlighter.py         # Custom Python syntax highlighter
+│   │   └── infobox.py             # Information and help dialog
+│   │
+│   ├── tests/                     # Test suite
+│   │   ├── conftest.py            # Pytest configuration
+│   │   └── test_*.py              # Various test files
+│   │
+│   └── images/                    # UI assets (icons)
+│
+├── user_files/                    # User-specific data (gitignored)
+│   └── [hashed_token]/            # Per-user directory (SHA256 of session token)
+│       ├── preferences.json       # Saved user preferences
+│       └── utils.py               # User's custom utility functions
+│
+├── requirements-dev.txt           # Development dependencies
+└── README.md                      # This file
 ```
 
-There is also a folder called user_files. What this is will be explained later, but essentially it's a file structure to store user preferences and their utility files,
-identified by their token which is hashed via SHA256 and stored as the folder name. The one you see is a mimic to show what it would look like.
-
-You can call any fucntion defined in there as if they were defined in your interface already, no imports needed.
+The `user_files` folder stores user preferences and utility files, with each user identified by their session token hashed via SHA256.
+You can define custom functions in your `utils.py` file and call them directly in your solutions without any imports needed.
 
 ## Technologies Used
 
 - **GUI**: PySide6 (Qt for Python)
 - **Web Scraping**: requests, BeautifulSoup4
-- **Syntax Highlighting**: Just pure Python!
-- **JSON Storage**: For storing user preferences. I plan to shift this over to a Database in the future
+- **Secure Storage**: keyring (for session token management)
+- **Syntax Highlighting**: Custom built-from-scratch Python highlighter
+- **Testing**: pytest with Qt support
+- **Data Storage**: JSON for user preferences
 
 ## Plans for the Future
 
