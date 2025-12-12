@@ -1,2 +1,23 @@
 user_files/*
 Code/__pycache__
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Pytest
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
