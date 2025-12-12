@@ -4,6 +4,7 @@ from typing import List, Optional
 from PySide6 import QtWidgets, QtCore, QtGui
 from core.aoc_fetcher import fetch_input, fetch_problem, get_last_paragraph
 from ui.highlighter import PythonHighlighter
+from ui.code_editor import CodeEditor
 from PySide6.QtGui import QFont, QTextCursor, QIcon
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QSize, QObject
@@ -171,11 +172,15 @@ class AoCEditor(QtWidgets.QWidget):
         right_splitter: QtWidgets.QSplitter = QtWidgets.QSplitter(
             QtCore.Qt.Vertical)
 
-        self.code_editor: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
+        # Create code editor with line numbers
+        self.code_editor = CodeEditor()
         self.code_editor.setPlaceholderText("Write your code here...")
 
-        # Set tab width to exactly 4 spaces
-        metrics: QtGui.QFontMetrics = QtGui.QFontMetrics(QFont("Arial", 12))
+        # Set font and tab width
+        code_editor_font = QFont("Arial", 12)
+        self.code_editor.setFont(code_editor_font)
+
+        metrics: QtGui.QFontMetrics = QtGui.QFontMetrics(code_editor_font)
         self.code_editor.setTabStopDistance(metrics.horizontalAdvance(' ') * 4)
 
         right_splitter.addWidget(self.code_editor)

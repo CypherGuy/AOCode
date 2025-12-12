@@ -32,7 +32,8 @@ class Infobox(QWidget):
         main_layout.addWidget(tips_title)
 
         tips_label = QLabel("""
-- There's a hint box for you to view the question in the top left.                            
+- There's a hint box for you to view the question in the top left.
+- Line numbers are displayed on the left of the code editor.
 - Click on 'Utils File' to add your own functions you can call at any time.                            
 - Your input data can be called using the variable 'data'.                            
 - Click on 'Run' to execute your code and view the output in the console.                    
